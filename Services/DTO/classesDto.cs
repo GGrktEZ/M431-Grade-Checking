@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
+//dies ist der Beste Kommentar der WElt
 namespace Services.DTO;
 
 public class classesDto
