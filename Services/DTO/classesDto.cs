@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-//dies ist der Beste Kommentar der WElt
+//dies ist der Beste Kommentar EUW
 namespace Services.DTO;
 
 public class classesDto
