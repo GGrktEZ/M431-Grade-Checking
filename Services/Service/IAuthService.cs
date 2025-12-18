@@ -1,4 +1,4 @@
-using Services.DTO;
+using Shared.DTOs;
 
 namespace Services.Service;
 

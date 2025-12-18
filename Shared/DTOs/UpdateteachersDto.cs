@@ -1,10 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
-public class CreateteachersDto
+public class UpdateteachersDto
 {
-
     [Required]
     [MaxLength(100)]
     public string first_name { get; set; }
@@ -16,7 +15,5 @@ public class CreateteachersDto
     [Required]
     [EmailAddress]
     [MaxLength(150)]
-    public string email { get; set; }
-
-
+public string email { get; set; }
 }

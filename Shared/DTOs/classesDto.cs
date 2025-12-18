@@ -1,9 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
-public class UpdateclassesDto
+public class classesDto
 {
+    [Key]
+    public int class_id { get; set; }
+
     [Required]
     [MaxLength(150)]
     public string class_name { get; set; }

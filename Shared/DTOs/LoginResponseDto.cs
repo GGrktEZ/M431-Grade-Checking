@@ -1,4 +1,4 @@
-namespace Services.DTO;
+namespace Shared.DTOs;
 
 public class LoginResponseDto
 {

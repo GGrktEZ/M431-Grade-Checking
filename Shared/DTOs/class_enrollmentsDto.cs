@@ -1,14 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
-public class Updateclass_enrollmentsDto
+public class class_enrollmentsDto
 {
-    [Required]
+    [Key]
+    public int enrollment_id { get; set; }
+
+  [Required]
     public int class_id { get; set; }
 
     [Required]
     public int student_id { get; set; }
-
-
 }

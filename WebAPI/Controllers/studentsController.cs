@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Services.DTO;
+using Shared.DTOs;
 using Services.Service;
 
 namespace WebAPI.Controllers;
