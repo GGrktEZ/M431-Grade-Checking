@@ -2,10 +2,10 @@ using DataAccess.Model;
 using DataAccess.Repository;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Shared.DTOs;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Shared.DTOs;
 
 namespace Services.Service;
 
