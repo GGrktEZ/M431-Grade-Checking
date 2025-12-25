@@ -16,11 +16,8 @@ public class AuthRepository : IAuthRepository
     }
 
     /// <inheritdoc />
-    public teachers? GetTeacherByNameAndEmail(string firstName, string lastName, string email)
+    public teachers? GetTeacherByEmail(string email)
     {
-        return _db.teachers.FirstOrDefault(t => 
-         t.first_name == firstName && 
-   t.last_name == lastName && 
-     t.email == email);
+        return _db.teachers.FirstOrDefault(t => t.email == email);
     }
 }

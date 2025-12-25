@@ -21,5 +21,6 @@ public class teachers
     [MaxLength(150)]
     public string email { get; set; }
 
-
+    [Required]
+    public string password_hash { get; set; }
 }

@@ -17,4 +17,4 @@ namespace Frontend
             await builder.Build().RunAsync();
         }
     }
-}
+}                                              

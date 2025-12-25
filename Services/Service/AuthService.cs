@@ -22,12 +22,15 @@ public class AuthService : IAuthService
 
     public LoginResponseDto? VerifyEmail(LoginRequestDto loginReq)
     {
-        teachers? teacher = _authRepository.GetTeacherByNameAndEmail(
-  loginReq.first_name,
- loginReq.last_name,
-   loginReq.email);
+        teachers? teacher = _authRepository.GetTeacherByEmail(loginReq.email);
 
         if (teacher == null) return null;
+
+        // Verify the password using Argon2
+        if (!PasswordHasher.VerifyPassword(loginReq.password, teacher.password_hash))
+        {
+            return null;
+        }
 
         return new LoginResponseDto { Token = GenerateJwtToken(teacher) };
     }

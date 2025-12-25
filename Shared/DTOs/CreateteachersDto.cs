@@ -16,4 +16,8 @@ public class CreateteachersDto
     [EmailAddress]
     [MaxLength(150)]
     public string email { get; set; }
+
+    [Required]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
+    public string password { get; set; }
 }
