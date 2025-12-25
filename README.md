@@ -1,5 +1,4 @@
-
-SQL Script: 
+SQL SCRIPT: 
 
 -- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
@@ -99,13 +98,14 @@ DROP TABLE IF EXISTS `teachers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `teachers` (
-  `teacher_id` int NOT NULL AUTO_INCREMENT,
-  `first_name` varchar(100) NOT NULL,
-  `last_name` varchar(100) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  PRIMARY KEY (`teacher_id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    `teacher_id` INT NOT NULL AUTO_INCREMENT,
+    `first_name` VARCHAR(100) NOT NULL,
+    `last_name` VARCHAR(100) NOT NULL,
+    `email` VARCHAR(150) NOT NULL,
+    `password_hash` VARCHAR(500),
+    PRIMARY KEY (`teacher_id`),
+    UNIQUE KEY `email` (`email`)
+)  ENGINE=INNODB AUTO_INCREMENT=2 DEFAULT CHARSET=UTF8MB4 COLLATE = UTF8MB4_0900_AI_CI;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
