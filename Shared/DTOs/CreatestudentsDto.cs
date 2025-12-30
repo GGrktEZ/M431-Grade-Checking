@@ -1,16 +1,16 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
-public class UpdateteachersDto
+public class CreatestudentsDto
 {
-    [Required]
+[Required]
     [MaxLength(100)]
     public string first_name { get; set; }
 
     [Required]
     [MaxLength(100)]
-  public string last_name { get; set; }
+    public string last_name { get; set; }
 
     [Required]
     [EmailAddress]

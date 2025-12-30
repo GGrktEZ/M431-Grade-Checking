@@ -1,6 +1,6 @@
 using DataAccess.Model;
 using DataAccess.Repository;
-using Services.DTO;
+using Shared.DTOs;
 
 namespace Services.Service;
 
@@ -10,85 +10,88 @@ public class teachersService : IteachersService
 
     public teachersService(IteachersRepository teachersRepository)
     {
-  _teachersRepository = teachersRepository;
+        _teachersRepository = teachersRepository;
     }
 
     private teachersDto ToDto(teachers teachers)
     {
         return new teachersDto
         {
-   teacher_id = teachers.teacher_id,
-   first_name = teachers.first_name,
-      last_name = teachers.last_name,
- email = teachers.email
+ teacher_id = teachers.teacher_id,
+            first_name = teachers.first_name,
+            last_name = teachers.last_name,
+      email = teachers.email
         };
-}
+    }
 
     private teachers ToModel(teachersDto teachersDto)
     {
-        return new teachers
+      return new teachers
         {
-      teacher_id = teachersDto.teacher_id,
-   first_name = teachersDto.first_name,
-  last_name = teachersDto.last_name,
-        email = teachersDto.email
+            teacher_id = teachersDto.teacher_id,
+          first_name = teachersDto.first_name,
+      last_name = teachersDto.last_name,
+   email = teachersDto.email,
+     password_hash = string.Empty // Not used in this context
         };
     }
 
     private teachers ToModel(CreateteachersDto createDto)
-  {
-   return new teachers
- {
-  first_name = createDto.first_name,
-      last_name = createDto.last_name,
-            email = createDto.email
-};
+    {
+        return new teachers
+        {
+   first_name = createDto.first_name,
+            last_name = createDto.last_name,
+      email = createDto.email,
+            password_hash = PasswordHasher.HashPassword(createDto.password)
+        };
     }
 
-   /// <inheritdoc />
-   public teachersDto? GetteachersById(int id)
-   {
-       teachers? teachers = _teachersRepository.GetteachersById(id);
-       if (teachers == null) return null;
-   teachersDto teachersDto = ToDto(teachers);
-       return teachersDto;
-   }
+    /// <inheritdoc />
+    public teachersDto? GetteachersById(int id)
+    {
+        teachers? teachers = _teachersRepository.GetteachersById(id);
+  if (teachers == null) return null;
+      teachersDto teachersDto = ToDto(teachers);
+        return teachersDto;
+    }
 
-   /// <inheritdoc />
-   public IEnumerable<teachersDto> GetAllteacherss()
-   {
+    /// <inheritdoc />
+    public IEnumerable<teachersDto> GetAllteacherss()
+    {
    return _teachersRepository.GetAllteacherss().Select(x => ToDto(x));
-   }
+    }
 
-   /// <inheritdoc />
-    public int Addteachers(CreateteachersDto teachers)
+    /// <inheritdoc />
+ public int Addteachers(CreateteachersDto teachers)
     {
         teachers createdteachers = ToModel(teachers);
-   _teachersRepository.Addteachers(createdteachers);
-        return createdteachers.teacher_id;
+     _teachersRepository.Addteachers(createdteachers);
+   return createdteachers.teacher_id;
     }
 
-   /// <inheritdoc />
-   public bool Updateteachers(int id, UpdateteachersDto teachers)
-   {
-       teachers teachersToUpdate = _teachersRepository.GetteachersById(id);
-       if (teachersToUpdate == null) return false;
-       
-       // Update properties from DTO
-   teachersToUpdate.first_name = teachers.first_name;
-       teachersToUpdate.last_name = teachers.last_name;
-       teachersToUpdate.email = teachers.email;
+    /// <inheritdoc />
+    public bool Updateteachers(int id, UpdateteachersDto teachers)
+    {
+        teachers teachersToUpdate = _teachersRepository.GetteachersById(id);
+  if (teachersToUpdate == null) return false;
+        
+        // Update properties from DTO
+        teachersToUpdate.first_name = teachers.first_name;
+        teachersToUpdate.last_name = teachers.last_name;
+        teachersToUpdate.email = teachers.email;
+        // Note: Password is not updated via this endpoint
   
-       _teachersRepository.Updateteachers(teachersToUpdate);
-       return true;
-   }
+     _teachersRepository.Updateteachers(teachersToUpdate);
+  return true;
+    }
 
-   /// <inheritdoc />
+    /// <inheritdoc />
     public bool Deleteteachers(int id)
     {
- teachers teachers = _teachersRepository.GetteachersById(id);
+        teachers teachers = _teachersRepository.GetteachersById(id);
    if (teachers == null) return false;
         _teachersRepository.Deleteteachers(teachers);
-   return true;
+        return true;
     }
 }

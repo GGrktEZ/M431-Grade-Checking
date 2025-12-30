@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
-public class CreatestudentsDto
+public class CreateteachersDto
 {
     [Required]
     [MaxLength(100)]
@@ -17,5 +17,7 @@ public class CreatestudentsDto
     [MaxLength(150)]
     public string email { get; set; }
 
-
+    [Required]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
+    public string password { get; set; }
 }

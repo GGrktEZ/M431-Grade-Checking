@@ -1,14 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
 public class UpdategradesDto
 {
-
     [Required]
     public int enrollment_id { get; set; }
 
-    [Required]
+  [Required]
     [MaxLength(10)]
     public string grade_value { get; set; }
 
@@ -16,6 +15,4 @@ public class UpdategradesDto
     public DateTime grade_timestamp { get; set; }
 
     public string comment { get; set; }
-
-
 }

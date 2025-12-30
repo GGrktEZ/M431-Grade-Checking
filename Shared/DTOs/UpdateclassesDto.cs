@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Services.DTO;
+namespace Shared.DTOs;
 
-public class CreateclassesDto
+public class UpdateclassesDto
 {
     [Required]
     [MaxLength(150)]
@@ -12,6 +12,4 @@ public class CreateclassesDto
 
     [Required]
     public int teacher_id { get; set; }
-
-
 }
