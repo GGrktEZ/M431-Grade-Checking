@@ -1,16 +1,53 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="page bg-light">
+
+    <nav class="navbar navbar-expand navbar-light bg-white">
+        <div class="container-fluid px-5">
+
+            <!-- Navbar links -->
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <span class="fw-semibold">Nachtrag Semesternoten</span>
+            </a>
+
+            <!-- Navbar rechts -->
+            <div class="d-flex align-items-center gap-3">
+
+                <a class="nav-link fw-semibold" href="/formular">
+                    Formular
+                </a>
+
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/login"><i class="bi bi-box-arrow-in-right me-2"></i> Login</a></li>
+                        <li><a class="dropdown-item" href="/registration"><i class="bi bi-pencil-square me-2"></i> Registration</a></li>
+                    </ul>
+                </div>
+
+                <button class="btn btn-outline-dark rounded-pill px-3" @onclick="Logout">
+                    <i class="bi bi-box-arrow-right me-1"></i>
+                    Logout
+                </button>
+
+            </div>
+        </div>
+    </nav>
+
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
 
         <article class="content px-4">
-            @Body
+            <ErrorBoundary>
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent>
+                    Unhandled excpetion occured
+                </ErrorContent>
+            </ErrorBoundary>
+
         </article>
     </main>
 </div>
