@@ -7,8 +7,8 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
-                <div class="card-header">
-                    <h3>Register as Teacher</h3>
+                <div class="card-header text-center">
+                    <h3>Registrierung</h3>
                 </div>
                 <div class="card-body">
                     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -21,7 +21,7 @@
                     @if (IsSuccess)
                     {
                         <div class="alert alert-success" role="alert">
-                            Registration successful! You can now login.
+                            Registration erfolgreich! Sie können sich nun einloggen.
                         </div>
                     }
 
@@ -30,13 +30,13 @@
                         <ValidationSummary class="text-danger" />
 
                         <div class="mb-3">
-                            <label for="firstName" class="form-label">First Name</label>
+                            <label for="firstName" class="form-label">Vorname</label>
                             <InputText id="firstName" class="form-control" @bind-Value="registerDto.first_name" />
                             <ValidationMessage For="@(() => registerDto.first_name)" />
                         </div>
 
                         <div class="mb-3">
-                            <label for="lastName" class="form-label">Last Name</label>
+                            <label for="lastName" class="form-label">Nachname</label>
                             <InputText id="lastName" class="form-control" @bind-Value="registerDto.last_name" />
                             <ValidationMessage For="@(() => registerDto.last_name)" />
                         </div>
@@ -48,7 +48,19 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
+                            <label for="email" class="form-label">Email bestätigen</label>
+                            <InputText id="email" type="email" class="form-control" @bind-Value="registerDto.email" />
+                            <ValidationMessage For="@(() => registerDto.email)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Passwort</label>
+                            <InputText id="password" type="password" class="form-control" @bind-Value="registerDto.password" />
+                            <ValidationMessage For="@(() => registerDto.password)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Passwort bestätigen</label>
                             <InputText id="password" type="password" class="form-control" @bind-Value="registerDto.password" />
                             <ValidationMessage For="@(() => registerDto.password)" />
                         </div>
@@ -57,17 +69,17 @@
                             @if (IsLoading)
                             {
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span> Registering...</span>
+                                <span> Wird registriert...</span>
                             }
                             else
                             {
-                                <span>Register</span>
+                                <span>Registrieren</span>
                             }
                         </button>
                     </EditForm>
 
                     <div class="mt-3 text-center">
-                        <p>Already have an account? <a href="/login">Login here</a></p>
+                        <p>Account vorhanden? <a href="/login">Hier einloggen</a></p>
                     </div>
                 </div>
             </div>

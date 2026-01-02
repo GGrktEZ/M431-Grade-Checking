@@ -7,8 +7,8 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
        <div class="card">
-         <div class="card-header">
-      <h3>Teacher Login</h3>
+         <div class="card-header text-center">
+      <h3>Login</h3>
       </div>
   <div class="card-body">
   @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -29,7 +29,7 @@
          </div>
 
              <div class="mb-3">
-       <label for="password" class="form-label">Password</label>
+       <label for="password" class="form-label">Passwort</label>
               <InputText id="password" type="password" class="form-control" @bind-Value="loginDto.password" />
    <ValidationMessage For="@(() => loginDto.password)" />
        </div>
@@ -38,7 +38,7 @@
              @if (IsLoading)
        {
     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-    <span> Logging in...</span>
+    <span> Wird eingeloggt...</span>
       }
     else
      {
@@ -48,7 +48,7 @@
         </EditForm>
 
         <div class="mt-3 text-center">
-                 <p>Don't have an account? <a href="/register">Register here</a></p>
+                 <p>Noch keinen Account? <a href="/register">Hier registrieren</a></p>
      </div>
     </div>
             </div>
