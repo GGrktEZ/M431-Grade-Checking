@@ -17,5 +17,8 @@ public class classes
     [Required]
     public int teacher_id { get; set; }
 
+    [Required]
+    public int module_id { get; set; }
+
 
 }

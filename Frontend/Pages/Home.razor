@@ -1,7 +1,85 @@
-﻿@page "/"
+﻿@page "/formular"
+@using Microsoft.EntityFrameworkCore
+@using DataAccess.Model
 
-<PageTitle>Home</PageTitle>
+<div class="container py-4">
+    <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
 
-<h1>Hello, world!</h1>
+        <div class="row g-3">
 
-Welcome to your new app.
+            <!-- Klasse -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Klasse auswählen *</label>
+                <InputSelect class="form-select"
+                             @bind-Value="_model.class_id"
+                             @onchange="OnClassChanged"
+                             required>
+                    <option value="">Bitte wählen…</option>
+                    @foreach (var c in _classes)
+                    {
+                        <option value="@c.class_id">@c.class_name</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <!-- Schüler -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Schüler auswählen *</label>
+                <InputSelect class="form-select"
+                             @bind-Value="_model.student_id"
+                             disabled="@(!_model.class_id.HasValue)"
+                             @onchange="OnStudentChanged"
+                             required>
+                    <option value="">Bitte wählen…</option>
+                    @foreach (var s in _studentsForClass)
+                    {
+                        <option value="@s.student_id">@s.last_name @s.first_name</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <!-- Modul (aus DTO -> module_id -> modules query) -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Modul</label>
+                <input class="form-control" value="@_moduleText" disabled />
+            </div>
+
+            <!-- Prüfungsbezeichnung -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Prüfungsbezeichnung *</label>
+                <InputText class="form-control" @bind-Value="_model.exam_name" required />
+            </div>
+
+            <!-- Alte Note -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Alte Note</label>
+                <InputText class="form-control" @bind-Value="_model.old_grade" disabled />
+            </div>
+
+            <div class="col-12 col-md-6"></div>
+
+            <!-- Neue Note -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Neue Note *</label>
+                <InputText class="form-control" @bind-Value="_model.new_grade" required />
+            </div>
+
+            <div class="col-12 col-md-6"></div>
+
+            <!-- Bemerkung -->
+            <div class="col-12 col-md-6">
+                <label class="form-label">Bemerkung</label>
+                <InputTextArea class="form-control" rows="5" @bind-Value="_model.comment" />
+            </div>
+
+            <div class="col-12 col-md-6 d-flex align-items-end justify-content-end">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+
+        </div>
+    </EditForm>
+</div>
+
+
+}
