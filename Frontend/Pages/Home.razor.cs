@@ -30,13 +30,14 @@ public partial class Home : ComponentBase
 
         var selectedClass = _classes.First(x => x.class_id == _model.class_id.Value);
 
-        // Modultext (api/modules/{id})
+        // Modul: GET api/modules/{id}
         var mod = await Http.GetFromJsonAsync<ModuleDto>($"api/modules/{selectedClass.module_id}");
         if (mod != null)
             _moduleText = $"{mod.module_code} – {mod.module_name}";
 
-        // Schüler in Klasse (api/classes/{classId}/students)
-        _studentsForClass = await Http.GetFromJsonAsync<List<studentsDto>>($"api/classes/{selectedClass.class_id}/students") ?? new();
+        // Schüler: GET api/classes/{classId}/students
+        _studentsForClass = await Http.GetFromJsonAsync<List<studentsDto>>(
+            $"api/classes/{selectedClass.class_id}/students") ?? new();
     }
 
     private async Task OnStudentChanged(ChangeEventArgs _)
@@ -46,7 +47,7 @@ public partial class Home : ComponentBase
 
         if (!_model.class_id.HasValue || !_model.student_id.HasValue) return;
 
-        // enrollment + letzte note via API
+        // Enrollment + letzte Note: GET api/classes/{classId}/students/{studentId}/lastgrade
         var result = await Http.GetFromJsonAsync<EnrollmentAndLastGradeDto>(
             $"api/classes/{_model.class_id}/students/{_model.student_id}/lastgrade");
 
@@ -60,11 +61,13 @@ public partial class Home : ComponentBase
     {
         if (_model.enrollment_id is null) return;
 
-        var dto = new gradesDto
+        // Backend erwartet CreategradesDto (inkl. grade_timestamp)
+        var dto = new CreategradesDto
         {
             enrollment_id = _model.enrollment_id.Value,
             grade_value = _model.new_grade!,
-            comment = _model.comment
+            grade_timestamp = DateTime.UtcNow,
+            comment = _model.comment ?? ""
         };
 
         var response = await Http.PostAsJsonAsync("api/grades", dto);
@@ -80,15 +83,16 @@ public partial class Home : ComponentBase
         public int? class_id { get; set; }
         public int? student_id { get; set; }
         public int? enrollment_id { get; set; }
-        public string? exam_name { get; set; }
+
+        public string? exam_name { get; set; } // UI-only, nicht in DB gespeichert
         public string? old_grade { get; set; }
         public string? new_grade { get; set; }
         public string? comment { get; set; }
     }
-}
 
-public class EnrollmentAndLastGradeDto
-{
-    public int enrollment_id { get; set; }
-    public string? last_grade_value { get; set; }
+    private class EnrollmentAndLastGradeDto
+    {
+        public int enrollment_id { get; set; }
+        public string? last_grade_value { get; set; }
+    }
 }

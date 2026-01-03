@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
+namespace DataAccess.Model;
+
 public class modules
 {
     [Key]
@@ -14,5 +16,4 @@ public class modules
     public string module_name { get; set; } = "";
 
     public string? description { get; set; }
-
 }

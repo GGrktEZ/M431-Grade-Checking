@@ -1,6 +1,4 @@
 ﻿@page "/formular"
-@using Microsoft.EntityFrameworkCore
-@using DataAccess.Model
 
 <div class="container py-4">
     <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
@@ -39,7 +37,7 @@
                 </InputSelect>
             </div>
 
-            <!-- Modul (aus DTO -> module_id -> modules query) -->
+            <!-- Modul -->
             <div class="col-12 col-md-6">
                 <label class="form-label">Modul</label>
                 <input class="form-control" value="@_moduleText" disabled />
@@ -80,6 +78,3 @@
         </div>
     </EditForm>
 </div>
-
-
-}

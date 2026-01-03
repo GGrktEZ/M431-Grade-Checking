@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.DTOs;
 using Services.Service;
+using Shared.DTOs;
 
 namespace WebAPI.Controllers;
 
@@ -9,42 +8,42 @@ namespace WebAPI.Controllers;
 [ApiController]
 public class class_enrollmentsController : ControllerBase
 {
-    private readonly Iclass_enrollmentsService _class_enrollmentsService;
+    private readonly Iclass_enrollmentsService _enrollmentsService;
 
-    /// <summary>
-    /// Constructor to enable the dependency injection of <see cref="class_enrollmentsService"/>.
-    /// </summary>
-    /// <param name="class_enrollmentsService">The reference to the class_enrollmentsService.</param>
-    public class_enrollmentsController(Iclass_enrollmentsService class_enrollmentsService)
+    public class_enrollmentsController(Iclass_enrollmentsService enrollmentsService)
     {
-        _class_enrollmentsService = class_enrollmentsService;
+        _enrollmentsService = enrollmentsService;
     }
+
     [HttpGet("{id}")]
     public ActionResult<class_enrollmentsDto?> Getclass_enrollmentsById(int id)
     {
-        class_enrollmentsDto? class_enrollmentsDto = _class_enrollmentsService.Getclass_enrollmentsById(id);
-        return class_enrollmentsDto == null ? NotFound() : Ok(class_enrollmentsDto);
+        var dto = _enrollmentsService.Getclass_enrollmentsById(id);
+        return dto == null ? NotFound() : Ok(dto);
     }
+
     [HttpGet]
     public ActionResult<IEnumerable<class_enrollmentsDto>> GetAllclass_enrollmentss()
     {
-        return Ok(_class_enrollmentsService.GetAllclass_enrollmentss());
+        return Ok(_enrollmentsService.GetAllclass_enrollmentss());
     }
+
     [HttpPost]
-    public ActionResult Addclass_enrollments(Createclass_enrollmentsDto class_enrollments)
+    public ActionResult Addclass_enrollments(Createclass_enrollmentsDto enrollment)
     {
-        int id = _class_enrollmentsService.Addclass_enrollments(class_enrollments);
+        int id = _enrollmentsService.Addclass_enrollments(enrollment);
         return CreatedAtAction(nameof(Getclass_enrollmentsById), new { id }, id);
     }
+
     [HttpPut]
-    public ActionResult Updateclass_enrollments(int id, Updateclass_enrollmentsDto class_enrollments)
+    public ActionResult Updateclass_enrollments(int id, Updateclass_enrollmentsDto enrollment)
     {
-        return _class_enrollmentsService.Updateclass_enrollments(id, class_enrollments) ? NoContent() : NotFound();
+        return _enrollmentsService.Updateclass_enrollments(id, enrollment) ? NoContent() : NotFound();
     }
+
     [HttpDelete]
     public ActionResult Deleteclass_enrollments(int id)
     {
-        return _class_enrollmentsService.Deleteclass_enrollments(id) ? NoContent() : NotFound();
+        return _enrollmentsService.Deleteclass_enrollments(id) ? NoContent() : NotFound();
     }
-
 }
