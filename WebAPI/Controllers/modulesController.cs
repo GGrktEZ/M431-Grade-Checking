@@ -16,7 +16,25 @@ public class modulesController : ControllerBase
         _db = db;
     }
 
-    // GET api/modules/1
+    // NEU: GET api/modules  -> für optionales Modul-Dropdown
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ModuleDto>>> GetAll()
+    {
+        var list = await _db.modules.AsNoTracking()
+            .Select(x => new ModuleDto
+            {
+                module_id = x.module_id,
+                module_code = x.module_code,
+                module_name = x.module_name,
+                description = x.description
+            })
+            .OrderBy(x => x.module_code)
+            .ToListAsync();
+
+        return Ok(list);
+    }
+
+    // GET api/modules/{id}
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ModuleDto>> GetById(int id)
     {

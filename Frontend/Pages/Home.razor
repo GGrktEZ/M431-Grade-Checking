@@ -13,7 +13,6 @@
                              @bind-Value="_model.class_id"
                              @onchange="OnClassChanged"
                              required>
-                    <option value="">Bitte wählen…</option>
                     @foreach (var c in _classes)
                     {
                         <option value="@c.class_id">@c.class_name</option>
@@ -29,7 +28,6 @@
                              disabled="@(!_model.class_id.HasValue)"
                              @onchange="OnStudentChanged"
                              required>
-                    <option value="">Bitte wählen…</option>
                     @foreach (var s in _studentsForClass)
                     {
                         <option value="@s.student_id">@s.last_name @s.first_name</option>
