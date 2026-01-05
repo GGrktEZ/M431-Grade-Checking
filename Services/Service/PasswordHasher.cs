@@ -9,8 +9,8 @@ namespace Services.Service;
 /// </summary>
 public class PasswordHasher
 {
- private const int SaltSize = 16; // 128 bits
-private const int HashSize = 32; // 256 bits
+    private const int SaltSize = 16; // 128 bits
+    private const int HashSize = 32; // 256 bits
     private const int Iterations = 4;
     private const int MemorySize = 65536; // 64 MB
     private const int Parallelism = 1;
@@ -28,13 +28,13 @@ private const int HashSize = 32; // 256 bits
         // Hash the password
         byte[] hash = HashPasswordInternal(password, salt);
 
-      // Combine salt and hash
+        // Combine salt and hash
         byte[] hashBytes = new byte[SaltSize + HashSize];
-     Array.Copy(salt, 0, hashBytes, 0, SaltSize);
+        Array.Copy(salt, 0, hashBytes, 0, SaltSize);
         Array.Copy(hash, 0, hashBytes, SaltSize, HashSize);
 
         // Return as base64 string
-      return Convert.ToBase64String(hashBytes);
+        return Convert.ToBase64String(hashBytes);
     }
 
     /// <summary>
@@ -45,28 +45,28 @@ private const int HashSize = 32; // 256 bits
     /// <returns>True if the password matches the hash, false otherwise.</returns>
     public static bool VerifyPassword(string password, string hashedPassword)
     {
-      try
+        try
         {
             // Decode the base64 hash
-       byte[] hashBytes = Convert.FromBase64String(hashedPassword);
+            byte[] hashBytes = Convert.FromBase64String(hashedPassword);
 
             // Extract the salt
-    byte[] salt = new byte[SaltSize];
-   Array.Copy(hashBytes, 0, salt, 0, SaltSize);
+            byte[] salt = new byte[SaltSize];
+            Array.Copy(hashBytes, 0, salt, 0, SaltSize);
 
-     // Extract the hash
+            // Extract the hash
             byte[] storedHash = new byte[HashSize];
             Array.Copy(hashBytes, SaltSize, storedHash, 0, HashSize);
 
-   // Hash the provided password with the same salt
+            // Hash the provided password with the same salt
             byte[] computedHash = HashPasswordInternal(password, salt);
 
-          // Compare the hashes
-      return CryptographicOperations.FixedTimeEquals(computedHash, storedHash);
+            // Compare the hashes
+            return CryptographicOperations.FixedTimeEquals(computedHash, storedHash);
         }
-     catch
+        catch
         {
- return false;
+            return false;
         }
     }
 
@@ -75,12 +75,12 @@ private const int HashSize = 32; // 256 bits
     /// </summary>
     private static byte[] HashPasswordInternal(string password, byte[] salt)
     {
-   using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
-    {
+        using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+        {
             Salt = salt,
-     DegreeOfParallelism = Parallelism,
+            DegreeOfParallelism = Parallelism,
             MemorySize = MemorySize,
-         Iterations = Iterations
+            Iterations = Iterations
         };
 
         return argon2.GetBytes(HashSize);

@@ -7,7 +7,7 @@ public class teachersDto
     [Key]
     public int teacher_id { get; set; }
 
- [Required]
+    [Required]
     [MaxLength(100)]
     public string first_name { get; set; }
 
@@ -19,4 +19,8 @@ public class teachersDto
     [EmailAddress]
     [MaxLength(150)]
     public string email { get; set; }
+
+    public int? department_id_1 { get; set; }
+
+    public int? department_id_2 { get; set; }
 }

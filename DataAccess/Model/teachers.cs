@@ -21,6 +21,10 @@ public class teachers
     [MaxLength(150)]
     public string email { get; set; }
 
-    [Required]
-    public string password_hash { get; set; }
+    public int? department_id_1 { get; set; }
+
+    public int? department_id_2 { get; set; }
+
+    [MaxLength(500)]
+    public string? password_hash { get; set; }
 }

@@ -1,9 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Shared.DTOs;
+namespace DataAccess.Model;
 
-public class CreateteachersDto
+public class prorectors
 {
+    [Key]
+    public int prorector_id { get; set; }
+
     [Required]
     [MaxLength(100)]
     public string first_name { get; set; } = "";
@@ -17,11 +20,8 @@ public class CreateteachersDto
     [MaxLength(150)]
     public string email { get; set; } = "";
 
-    public int? department_id_1 { get; set; }
+    [Required]
+    public int department_id_1 { get; set; }
 
     public int? department_id_2 { get; set; }
-
-    [Required]
-    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
-    public string password { get; set; } = "";
 }

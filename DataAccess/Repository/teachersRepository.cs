@@ -37,8 +37,21 @@ public class teachersRepository : IteachersRepository
    /// <inheritdoc />
    public void Updateteachers(teachers updateteachers)
    {
-       _db.teachers.Update(updateteachers);
-       _db.SaveChanges();
+       var existing = _db.teachers.Find(updateteachers.teacher_id);
+       if (existing != null)
+       {
+         existing.first_name = updateteachers.first_name;
+         existing.last_name = updateteachers.last_name;
+         existing.email = updateteachers.email;
+         existing.department_id_1 = updateteachers.department_id_1;
+         existing.department_id_2 = updateteachers.department_id_2;
+           // Don't update password_hash here unless explicitly provided
+           if (!string.IsNullOrEmpty(updateteachers.password_hash))
+           {
+          existing.password_hash = updateteachers.password_hash;
+           }
+    _db.SaveChanges();
+       }
    }
 
    /// <inheritdoc />

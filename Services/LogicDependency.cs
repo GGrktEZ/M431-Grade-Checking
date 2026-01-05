@@ -20,5 +20,12 @@ public static class LogicDependency
         services.AddScoped<IclassesService, classesService>();
         services.AddScoped<Iclass_enrollmentsService, class_enrollmentsService>();
         services.AddScoped<IgradesService, gradesService>();
+        
+        services.AddScoped<IAuthService, AuthService>();
+        
+        services.AddScoped<IdepartmentsService, departmentsService>();
+        services.AddScoped<IprorectorsService, prorectorsService>();
+        services.AddScoped<Iteacher_prorectorsService, teacher_prorectorsService>();
+        services.AddScoped<Igrade_changesService, grade_changesService>();
     }
 }

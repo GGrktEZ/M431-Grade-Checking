@@ -18,6 +18,7 @@ public class AuthRepository : IAuthRepository
     /// <inheritdoc />
     public teachers? GetTeacherByEmail(string email)
     {
-        return _db.teachers.FirstOrDefault(t => t.email == email);
+        // Use case-insensitive comparison for email lookup
+        return _db.teachers.FirstOrDefault(t => t.email.ToLower() == email.ToLower());
     }
 }

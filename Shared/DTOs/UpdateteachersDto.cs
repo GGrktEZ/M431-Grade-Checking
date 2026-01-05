@@ -15,5 +15,9 @@ public class UpdateteachersDto
     [Required]
     [EmailAddress]
     [MaxLength(150)]
-public string email { get; set; }
+    public string email { get; set; }
+
+    public int? department_id_1 { get; set; }
+
+    public int? department_id_2 { get; set; }
 }

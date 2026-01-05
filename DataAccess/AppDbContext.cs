@@ -18,9 +18,13 @@ public class AppDbContext : DbContext
     public DbSet<classes> classes { get; set; }
     public DbSet<class_enrollments> class_enrollments { get; set; }
     public DbSet<grades> grades { get; set; }
-
-    // NEU
     public DbSet<modules> modules { get; set; }
+    
+    // New tables
+    public DbSet<departments> departments { get; set; }
+    public DbSet<prorectors> prorectors { get; set; }
+    public DbSet<teacher_prorectors> teacher_prorectors { get; set; }
+    public DbSet<grade_changes> grade_changes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,8 +36,35 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<classes>().ToTable("classes");
         modelBuilder.Entity<class_enrollments>().ToTable("class_enrollments");
         modelBuilder.Entity<grades>().ToTable("grades");
-
-        // NEU
         modelBuilder.Entity<modules>().ToTable("modules");
+        modelBuilder.Entity<departments>().ToTable("departments");
+        modelBuilder.Entity<prorectors>().ToTable("prorectors");
+        modelBuilder.Entity<teacher_prorectors>().ToTable("teacher_prorectors");
+        modelBuilder.Entity<grade_changes>().ToTable("grade_changes");
+
+        // Configure unique constraints
+        modelBuilder.Entity<departments>()
+      .HasIndex(d => d.department_name)
+         .IsUnique();
+
+     modelBuilder.Entity<modules>()
+           .HasIndex(m => m.module_code)
+    .IsUnique();
+
+            modelBuilder.Entity<students>()
+        .HasIndex(s => s.email)
+           .IsUnique();
+
+            modelBuilder.Entity<teachers>()
+                .HasIndex(t => t.email)
+                .IsUnique();
+
+      modelBuilder.Entity<prorectors>()
+      .HasIndex(p => p.email)
+        .IsUnique();
+
+            modelBuilder.Entity<class_enrollments>()
+ .HasIndex(ce => new { ce.class_id, ce.student_id })
+                .IsUnique();
     }
 }

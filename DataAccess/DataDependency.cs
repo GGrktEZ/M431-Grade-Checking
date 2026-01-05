@@ -18,10 +18,20 @@ public static class DataDependency
             options.UseMySql(connectionString,
                              ServerVersion.AutoDetect(connectionString)));
 
+        // Existing repositories
         services.AddScoped<IteachersRepository, teachersRepository>();
         services.AddScoped<IstudentsRepository, studentsRepository>();
         services.AddScoped<IclassesRepository, classesRepository>();
         services.AddScoped<Iclass_enrollmentsRepository, class_enrollmentsRepository>();
         services.AddScoped<IgradesRepository, gradesRepository>();
+    
+        // Authentication repository
+        services.AddScoped<IAuthRepository, AuthRepository>();
+        
+        // New repositories for database schema updates
+        services.AddScoped<IdepartmentsRepository, departmentsRepository>();
+        services.AddScoped<IprorectorsRepository, prorectorsRepository>();
+        services.AddScoped<Iteacher_prorectorsRepository, teacher_prorectorsRepository>();
+        services.AddScoped<Igrade_changesRepository, grade_changesRepository>();
     }
 }
