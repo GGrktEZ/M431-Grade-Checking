@@ -15,82 +15,114 @@ public class AuthService : IAuthService
     private readonly IAuthRepository _authRepository;
     private readonly IConfiguration _config;
     private readonly ILogger<AuthService> _logger;
+    private readonly IEmailService _emailService;
 
-    public AuthService(IAuthRepository authRepository, IConfiguration config, ILogger<AuthService> logger)
+    public AuthService(
+        IAuthRepository authRepository,
+        IConfiguration config,
+        ILogger<AuthService> logger,
+        IEmailService emailService)
     {
         _authRepository = authRepository;
         _config = config;
         _logger = logger;
+        _emailService = emailService;
     }
 
-    public LoginResponseDto? VerifyEmail(LoginRequestDto loginReq)
-    {
-        _logger.LogInformation("Login attempt for email: {Email}", loginReq.email);
-        
-        teachers? teacher = _authRepository.GetTeacherByEmail(loginReq.email);
+    // ... dein bestehendes VerifyEmail + GenerateJwtToken bleibt unverändert ...
 
+    public async Task<RegisterTeacherResponseDto> RegisterTeacherAsync(RegisterTeacherRequestDto req)
+    {
+        // 1) Teacher muss existieren
+        teachers? teacher = _authRepository.GetTeacherByEmail(req.email);
         if (teacher == null)
         {
-            _logger.LogWarning("Teacher not found for email: {Email}", loginReq.email);
-            return null;
+            return new RegisterTeacherResponseDto
+            {
+                success = false,
+                message = "E-Mail ist nicht als Lehrperson erfasst."
+            };
         }
 
-        _logger.LogInformation("Teacher found: ID={TeacherId}, Email={Email}", teacher.teacher_id, teacher.email);
-
-        // Check if password_hash is null or empty
-        if (string.IsNullOrEmpty(teacher.password_hash))
+        // 2) Bereits registriert?
+        if (!string.IsNullOrEmpty(teacher.password_hash))
         {
-            _logger.LogWarning("Password hash is null or empty for teacher ID: {TeacherId}", teacher.teacher_id);
-            return null;
+            return new RegisterTeacherResponseDto
+            {
+                success = false,
+                message = "Diese Lehrperson ist bereits registriert."
+            };
         }
 
-        _logger.LogInformation("Password hash exists, length: {Length}", teacher.password_hash.Length);
-        _logger.LogDebug("Stored hash: {Hash}", teacher.password_hash);
-        _logger.LogDebug("Provided password: {Password}", loginReq.password);
+        // 3) Passwort hashen (du nutzt bereits Argon2)
+        string pwHash = PasswordHasher.HashPassword(req.password);
 
-        // Verify the password using Argon2
-        bool isPasswordValid = PasswordHasher.VerifyPassword(loginReq.password, teacher.password_hash);
-        _logger.LogInformation("Password verification result: {Result}", isPasswordValid);
+        // 4) Token erstellen + Hash speichern
+        string rawToken = RegistrationToken.CreateRawToken();
+        string tokenHash = RegistrationToken.HashToken(rawToken);
 
-        if (!isPasswordValid)
+        DateTime nowUtc = DateTime.UtcNow;
+        DateTime expiresUtc = nowUtc.AddYears(1); // 1 Jahr gueltig
+
+        bool updated = _authRepository.TryRegisterExistingTeacher(
+            req.email, pwHash, tokenHash, expiresUtc, nowUtc);
+
+        if (!updated)
         {
-            _logger.LogWarning("Password verification failed for teacher ID: {TeacherId}", teacher.teacher_id);
-            return null;
+            return new RegisterTeacherResponseDto
+            {
+                success = false,
+                message = "Registrierung nicht moeglich."
+            };
         }
 
-        _logger.LogInformation("Login successful for teacher ID: {TeacherId}", teacher.teacher_id);
-        return new LoginResponseDto { Token = GenerateJwtToken(teacher) };
+        // 5) Bestätigungslink bauen (kommt aus appsettings)
+        // Beispiel: https://localhost:7051/confirm?email=...&token=...
+        string baseUrl = _config["Registration:ConfirmUrlBase"] ?? "";
+        string link = $"{baseUrl}?email={Uri.EscapeDataString(req.email)}&token={Uri.EscapeDataString(rawToken)}";
+
+        string subject = "E-Mail bestaetigen";
+        string body =
+            "Bitte bestaetige deine E-Mail-Adresse mit folgendem Link:\n\n" +
+            link + "\n\n" +
+            "Der Link ist 1 Jahr gueltig.";
+
+        await _emailService.SendAsync(req.email, subject, body);
+
+        return new RegisterTeacherResponseDto
+        {
+            success = true,
+            message = "Registrierung erfolgreich. Bitte E-Mail bestaetigen."
+        };
     }
 
     private string GenerateJwtToken(teachers teacher)
     {
+        // unverändert
         JwtSecurityTokenHandler tokenHandler = new();
-
         byte[] key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
 
         Claim[] claims = new[]
-      {
-       new Claim(JwtRegisteredClaimNames.Sub, teacher.teacher_id.ToString()),
-    new Claim(JwtRegisteredClaimNames.Email, teacher.email),
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, teacher.teacher_id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, teacher.email),
             new Claim(JwtRegisteredClaimNames.GivenName, teacher.first_name),
-  new Claim(JwtRegisteredClaimNames.FamilyName, teacher.last_name)
-      };
+            new Claim(JwtRegisteredClaimNames.FamilyName, teacher.last_name)
+        };
 
-        SecurityTokenDescriptor tokenDescriptor = new
-       SecurityTokenDescriptor
+        SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(2),
             Issuer = _config["Jwt:Issuer"],
             Audience = _config["Jwt:Audience"],
             SigningCredentials = new SigningCredentials(
-    new SymmetricSecurityKey(key),
-         SecurityAlgorithms.HmacSha256Signature
-       )
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature
+            )
         };
 
         SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
-
 }

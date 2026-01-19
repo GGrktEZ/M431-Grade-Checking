@@ -4,10 +4,14 @@ namespace DataAccess.Repository;
 
 public interface IAuthRepository
 {
-    /// <summary>
-    /// Gets a teacher by email address.
-    /// </summary>
-    /// <param name="email">The teacher's email address.</param>
-    /// <returns>The teacher if found, otherwise null.</returns>
     teachers? GetTeacherByEmail(string email);
+
+    // NEW: registration update on existing teacher
+    bool TryRegisterExistingTeacher(
+        string email,
+        string passwordHash,
+        string tokenHash,
+        DateTime expiresAtUtc,
+        DateTime requestedAtUtc
+    );
 }

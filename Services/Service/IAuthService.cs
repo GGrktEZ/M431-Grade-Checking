@@ -4,6 +4,8 @@ namespace Services.Service;
 
 public interface IAuthService
 {
-    //Comment
-    public LoginResponseDto? VerifyEmail(LoginRequestDto loginReq);
+    LoginResponseDto? VerifyEmail(LoginRequestDto loginReq);
+
+    // NEW
+    Task<RegisterTeacherResponseDto> RegisterTeacherAsync(RegisterTeacherRequestDto req);
 }
