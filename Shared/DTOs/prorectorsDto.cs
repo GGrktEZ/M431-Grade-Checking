@@ -16,11 +16,11 @@ public class prorectorsDto
 
     [Required]
     [EmailAddress]
-  [MaxLength(150)]
+    [MaxLength(150)]
     public string email { get; set; } = "";
 
     [Required]
- public int department_id_1 { get; set; }
+    public int department_id_1 { get; set; }
 
     public int? department_id_2 { get; set; }
 }
@@ -31,7 +31,7 @@ public class CreateprorectorsDto
     [MaxLength(100)]
     public string first_name { get; set; } = "";
 
- [Required]
+    [Required]
     [MaxLength(100)]
     public string last_name { get; set; } = "";
 

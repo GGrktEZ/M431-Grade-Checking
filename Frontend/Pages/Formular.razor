@@ -1,0 +1,130 @@
+﻿@page "/formular"
+
+<div class="container py-4">
+    <EditForm Model="_model" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="row g-4">
+
+            <!-- LINKE SPALTE -->
+            <div class="col-12 col-md-6">
+                <div class="d-flex flex-column gap-3">
+
+                    <div>
+                        <label class="form-label">Klasse *</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="_model.class_id"
+                                     @bind-Value:after="OnClassChanged"
+                                     required>
+                            <option value="">Bitte wählen…</option>
+                            @foreach (var c in _classes)
+                            {
+                                <option value="@c.class_id">@c.class_name</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+
+                    <div>
+                        <label class="form-label">Modul *</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="_model.module_id"
+                                     disabled="@(!_model.teacher_id.HasValue)"
+                                     required>
+                            <option value="">Bitte wählen…</option>
+                            @foreach (var m in _modulesForTeacher)
+                            {
+                                <option value="@m.module_id">@m.module_code – @m.module_name</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Alte Note</label>
+                        <InputText class="form-control" @bind-Value="_model.old_grade" readonly />
+                    </div>
+
+                    <div>
+                        <label class="form-label">Neue Note *</label>
+                        <InputText class="form-control" @bind-Value="_model.new_grade" required />
+                    </div>
+
+                    <div>
+                        <label class="form-label">Bemerkung</label>
+                        <InputTextArea class="form-control" rows="6" @bind-Value="_model.comment" />
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- RECHTE SPALTE -->
+            <div class="col-12 col-md-6">
+                <div class="d-flex flex-column gap-3 h-100">
+                    <div>
+                        <label class="form-label">Schüler *</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="_model.student_id"
+                                     @bind-Value:after="OnStudentChanged"
+                                     disabled="@(!_model.class_id.HasValue)"
+                                     required>
+                            <option value="">Bitte wählen…</option>
+                            @foreach (var s in _studentsForClass)
+                            {
+                                <option value="@s.student_id">@s.last_name @s.first_name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div>
+                        <label class="form-label">Prüfungsbezeichnung *</label>
+                        <InputText class="form-control" @bind-Value="_model.exam_name" required />
+                    </div>
+
+                    <div style="height: 74px;"></div>
+
+
+                    <div>
+                        <label class="form-label">Prorektor *</label>
+                        <InputSelect class="form-select"
+                                     @bind-Value="_model.prorector_id"
+                                     disabled="@(!_model.teacher_id.HasValue)"
+                                     required>
+                            <option value="">Bitte wählen…</option>
+                            @foreach (var p in _prorectorsForTeacher)
+                            {
+                                <option value="@p.prorector_id">@p.last_name @p.first_name</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label fw-semibold">
+                            Wird in der Zukunft noch eine weitere Note zum folgenden Schüler eingetragen?
+                        </label>
+
+                        <InputRadioGroup @bind-Value="_model.has_future_grade">
+                            <div class="form-check mt-2">
+                                <InputRadio class="form-check-input" Value="true" />
+                                <label class="form-check-label">Ja</label>
+                            </div>
+
+                            <div class="form-check">
+                                <InputRadio class="form-check-input" Value="false" />
+                                <label class="form-check-label">Nein</label>
+                            </div>
+                        </InputRadioGroup>
+                    </div>
+
+
+
+
+                    <!-- Button nach unten wie im Sketch -->
+                    <div class="mt-auto text-end">
+                        <button type="submit" class="btn btn-primary px-4">Senden</button>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div>
+    </EditForm>
+</div>
