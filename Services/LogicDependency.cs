@@ -14,19 +14,20 @@ public static class LogicDependency
     {
         services.AddDataAccessLayer(config);
 
-
         services.AddScoped<IteachersService, teachersService>();
         services.AddScoped<IstudentsService, studentsService>();
         services.AddScoped<IclassesService, classesService>();
         services.AddScoped<Iclass_enrollmentsService, class_enrollmentsService>();
         services.AddScoped<IgradesService, gradesService>();
-        
+
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IEmailService, EmailService>();
 
         services.AddScoped<IdepartmentsService, departmentsService>();
         services.AddScoped<IprorectorsService, prorectorsService>();
         services.AddScoped<Iteacher_prorectorsService, teacher_prorectorsService>();
         services.AddScoped<Igrade_changesService, grade_changesService>();
+
+        // NEW
+        services.AddScoped<IEmailService, EmailService>();
     }
 }

@@ -11,7 +11,7 @@ public class EmailService : IEmailService
     public EmailService(IConfiguration config)
     {
         _smtp = config.GetSection("Smtp").Get<SmtpSettings>()
-                ?? throw new InvalidOperationException("Smtp settings are not configured.");
+            ?? throw new InvalidOperationException("Smtp settings are not configured.");
     }
 
     public async Task SendAsync(string toEmail, string subject, string body)

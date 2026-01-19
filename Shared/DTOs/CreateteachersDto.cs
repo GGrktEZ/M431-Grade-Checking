@@ -17,6 +17,13 @@ public class CreateteachersDto
     [MaxLength(150)]
     public string email { get; set; } = "";
 
+    // NEW: Email bestaetigen
+    [Required]
+    [EmailAddress]
+    [MaxLength(150)]
+    [Compare(nameof(email), ErrorMessage = "Email-Adressen stimmen nicht ueberein")]
+    public string email_confirm { get; set; } = "";
+
     public int? department_id_1 { get; set; }
 
     public int? department_id_2 { get; set; }
@@ -24,4 +31,9 @@ public class CreateteachersDto
     [Required]
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]
     public string password { get; set; } = "";
+
+    // NEW: Passwort bestaetigen
+    [Required]
+    [Compare(nameof(password), ErrorMessage = "Passwoerter stimmen nicht ueberein")]
+    public string password_confirm { get; set; } = "";
 }

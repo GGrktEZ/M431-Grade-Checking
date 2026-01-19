@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using Shared.DTOs;
+using Services.Service;
 
 namespace WebAPI.Controllers
 {
@@ -9,10 +10,143 @@ namespace WebAPI.Controllers
     public class teachersController : ControllerBase
     {
         private readonly string _connectionString;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _config;
 
-        public teachersController(IConfiguration config)
+        public teachersController(IConfiguration config, IEmailService emailService)
         {
+            _config = config;
             _connectionString = config.GetConnectionString("DefaultConnection")!;
+            _emailService = emailService;
+        }
+
+        // ==========================================
+        // REGISTRIERUNG (nur bestehende Lehrperson)
+        // POST api/teachers
+        // ==========================================
+        [HttpPost]
+        public async Task<IActionResult> RegisterTeacher([FromBody] CreateteachersDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest("Ungueltige Eingaben.");
+
+            // Optional: Schutz, falls jemand am Frontend vorbei sendet
+            if (!string.Equals(dto.email?.Trim(), dto.email_confirm?.Trim(), StringComparison.OrdinalIgnoreCase))
+                return BadRequest("Email-Adressen stimmen nicht ueberein.");
+
+            if (!string.Equals(dto.password, dto.password_confirm, StringComparison.Ordinal))
+                return BadRequest("Passwoerter stimmen nicht ueberein.");
+
+            string email = dto.email.Trim();
+
+            // Token (roh fuer Link) + Hash (in DB)
+            string rawToken = RegistrationToken.CreateRawToken();
+            string tokenHash = RegistrationToken.HashToken(rawToken);
+
+            string passwordHash = PasswordHasher.HashPassword(dto.password);
+
+            DateTime nowUtc = DateTime.UtcNow;
+            DateTime expiresUtc = nowUtc.AddYears(1);
+
+            const string sql = @"
+                UPDATE teachers
+                SET
+                    password_hash = @password_hash,
+                    email_confirmed = 0,
+                    email_confirmation_token_hash = @token_hash,
+                    email_confirmation_expires_at = @expires_at,
+                    registration_requested_at = @requested_at,
+                    email_confirmed_at = NULL
+                WHERE
+                    email = @email
+                    AND password_hash IS NULL
+                    AND LOWER(first_name) = LOWER(@first_name)
+                    AND LOWER(last_name)  = LOWER(@last_name);
+            ";
+
+            await using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            await using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@password_hash", passwordHash);
+            cmd.Parameters.AddWithValue("@token_hash", tokenHash);
+            cmd.Parameters.AddWithValue("@expires_at", expiresUtc);
+            cmd.Parameters.AddWithValue("@requested_at", nowUtc);
+            cmd.Parameters.AddWithValue("@email", email);
+            cmd.Parameters.AddWithValue("@first_name", dto.first_name.Trim());
+            cmd.Parameters.AddWithValue("@last_name", dto.last_name.Trim());
+
+            int rows = await cmd.ExecuteNonQueryAsync();
+
+            if (rows == 0)
+            {
+                // Kein Update bedeutet: Lehrer existiert nicht / Name passt nicht / bereits registriert
+                return BadRequest("Registrierung nicht moeglich (Daten stimmen nicht oder Lehrperson ist bereits registriert).");
+            }
+
+            // Confirm Link Basis
+            // appsettings: Registration:ConfirmUrlBase = "https://localhost:5001/api/teachers/confirm"
+            string baseUrl = _config["Registration:ConfirmUrlBase"] ?? "";
+            if (string.IsNullOrWhiteSpace(baseUrl))
+                return StatusCode(500, "ConfirmUrlBase ist nicht konfiguriert.");
+
+            string link =
+                $"{baseUrl}?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(rawToken)}";
+
+            string subject = "E-Mail bestaetigen";
+            string body =
+                "Bitte bestaetige deine E-Mail-Adresse mit folgendem Link:\n\n" +
+                link + "\n\n" +
+                "Der Link ist 1 Jahr gueltig.";
+
+            await _emailService.SendAsync(email, subject, body);
+
+            return Ok("Registrierung erfolgreich. Bitte E-Mail bestaetigen.");
+        }
+
+        // ==========================================
+        // BESTAETIGUNG
+        // GET api/teachers/confirm?email=...&token=...
+        // ==========================================
+        [HttpGet("confirm")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+                return BadRequest("Ungueltige Anfrage.");
+
+            string tokenHash = RegistrationToken.HashToken(token);
+            DateTime nowUtc = DateTime.UtcNow;
+
+            const string sql = @"
+                UPDATE teachers
+                SET
+                    email_confirmed = 1,
+                    email_confirmed_at = @confirmed_at,
+                    email_confirmation_token_hash = NULL,
+                    email_confirmation_expires_at = NULL
+                WHERE
+                    email = @email
+                    AND email_confirmed = 0
+                    AND email_confirmation_token_hash = @token_hash
+                    AND email_confirmation_expires_at IS NOT NULL
+                    AND email_confirmation_expires_at >= @now;
+            ";
+
+            await using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            await using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@confirmed_at", nowUtc);
+            cmd.Parameters.AddWithValue("@email", email.Trim());
+            cmd.Parameters.AddWithValue("@token_hash", tokenHash);
+            cmd.Parameters.AddWithValue("@now", nowUtc);
+
+            int rows = await cmd.ExecuteNonQueryAsync();
+
+            if (rows == 0)
+                return BadRequest("Token ungueltig oder abgelaufen.");
+
+            return Ok("E-Mail erfolgreich bestaetigt.");
         }
 
         // ===============================

@@ -6,11 +6,8 @@ namespace Frontend.Pages;
 
 public partial class Register : ComponentBase
 {
-    [Inject]
-    private HttpClient Http { get; set; } = default!;
-
-    [Inject]
-    private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
 
     private CreateteachersDto registerDto = new();
     private string? ErrorMessage { get; set; }
@@ -30,13 +27,15 @@ public partial class Register : ComponentBase
             if (response.IsSuccessStatusCode)
             {
                 IsSuccess = true;
-                registerDto = new CreateteachersDto(); // Reset form
+                registerDto = new CreateteachersDto();
                 StateHasChanged();
             }
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                ErrorMessage = $"Registration failed: {response.StatusCode}";
+                ErrorMessage = string.IsNullOrWhiteSpace(errorContent)
+                    ? $"Registration failed: {response.StatusCode}"
+                    : errorContent;
             }
         }
         catch (Exception ex)
