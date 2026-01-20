@@ -28,14 +28,14 @@ namespace WebAPI.Controllers
         public async Task<IActionResult> RegisterTeacher([FromBody] CreateteachersDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest("Ungueltige Eingaben.");
+                return BadRequest("Ungültige Eingaben.");
 
             // Optional: Schutz, falls jemand am Frontend vorbei sendet
             if (!string.Equals(dto.email?.Trim(), dto.email_confirm?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return BadRequest("Email-Adressen stimmen nicht ueberein.");
+                return BadRequest("Email-Adressen stimmen nicht überein.");
 
             if (!string.Equals(dto.password, dto.password_confirm, StringComparison.Ordinal))
-                return BadRequest("Passwoerter stimmen nicht ueberein.");
+                return BadRequest("Passwörter stimmen nicht überein.");
 
             string email = dto.email.Trim();
 
@@ -59,9 +59,8 @@ namespace WebAPI.Controllers
                     email_confirmed_at = NULL
                 WHERE
                     email = @email
-                    AND password_hash IS NULL
-                    AND LOWER(first_name) = LOWER(@first_name)
-                    AND LOWER(last_name)  = LOWER(@last_name);
+                    AND password_hash IS NULL;
+
             ";
 
             await using var conn = new MySqlConnection(_connectionString);
@@ -73,8 +72,6 @@ namespace WebAPI.Controllers
             cmd.Parameters.AddWithValue("@expires_at", expiresUtc);
             cmd.Parameters.AddWithValue("@requested_at", nowUtc);
             cmd.Parameters.AddWithValue("@email", email);
-            cmd.Parameters.AddWithValue("@first_name", dto.first_name.Trim());
-            cmd.Parameters.AddWithValue("@last_name", dto.last_name.Trim());
 
             int rows = await cmd.ExecuteNonQueryAsync();
 
@@ -93,15 +90,15 @@ namespace WebAPI.Controllers
             string link =
                 $"{baseUrl}?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(rawToken)}";
 
-            string subject = "E-Mail bestaetigen";
+            string subject = "E-Mail bestätigen";
             string body =
-                "Bitte bestaetige deine E-Mail-Adresse mit folgendem Link:\n\n" +
+                "Bitte bestätige deine E-Mail-Adresse mit folgendem Link:\n\n" +
                 link + "\n\n" +
                 "Der Link ist 1 Jahr gueltig.";
 
             await _emailService.SendAsync(email, subject, body);
 
-            return Ok("Registrierung erfolgreich. Bitte E-Mail bestaetigen.");
+            return Ok("Registrierung erfolgreich. Bitte E-Mail bestätigen.");
         }
 
         // ==========================================

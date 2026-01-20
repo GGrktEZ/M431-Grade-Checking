@@ -30,6 +30,23 @@ public class AuthService : IAuthService
     }
 
     // ... dein bestehendes VerifyEmail + GenerateJwtToken bleibt unverändert ...
+    public LoginResponseDto? VerifyEmail(LoginRequestDto loginReq)
+    {
+        var teacher = _authRepository.GetTeacherByEmail(loginReq.email);
+
+        if (teacher == null)
+            return null;
+
+        if (string.IsNullOrWhiteSpace(teacher.password_hash))
+            return null;
+
+        if (!PasswordHasher.VerifyPassword(loginReq.password, teacher.password_hash))
+            return null;
+
+        string token = GenerateJwtToken(teacher);
+
+        return new LoginResponseDto { Token = token };
+    }
 
     public async Task<RegisterTeacherResponseDto> RegisterTeacherAsync(RegisterTeacherRequestDto req)
     {
