@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject Frontend.AuthState AuthState
+@inject NavigationManager Nav
 @* test comment *@
 
 <div class="page bg-light">
@@ -12,51 +13,32 @@
                 <span class="fw-semibold">Nachtrag Semesternoten</span>
             </a>
 
-            <!-- Navbar links -->
+            <!-- Navbar rechts -->
             <div class="d-flex align-items-center gap-3">
 
-                @* Formular nur wenn eingeloggt *@
                 @if (AuthState.IsLoggedIn)
                 {
                     <a class="nav-link fw-semibold" href="/formular">
                         Formular
                     </a>
-                }
 
-                <div class="dropdown">
-                    <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-person fs-5"></i>
+                    <button class="nav-action-btn" type="button" @onclick="Logout">
+                        Abmelden
                     </button>
 
-                    <ul class="dropdown-menu dropdown-menu-end">
+                }
+                else
+                {
+                    <a class="btn btn-outline-dark" href="/login">
+                        <b>Login</b>
+                    </a>
 
-                        @* Wenn NICHT eingeloggt: Login/Registration *@
-                        @if (!AuthState.IsLoggedIn)
-                        {
-                            <li>
-                                <a class="dropdown-item" href="/login">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i> Login
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="/register">
-                                    <i class="bi bi-pencil-square me-2"></i> Registration
-                                </a>
-                            </li>
-                        }
+                    <a class="btn btn-outline-dark" href="/register">
+                        <b>Registration</b>
+                    </a>
 
-                        @* Wenn eingeloggt: optional Logout-Link (nur Navigation/State reset machen wir danach) *@
-                        @if (AuthState.IsLoggedIn)
-                        {
-                            <li>
-                                <a class="dropdown-item" href="/formular">
-                                    <i class="bi bi-journal-text me-2"></i> Formular
-                                </a>
-                            </li>
-                        }
+                }
 
-                    </ul>
-                </div>
 
             </div>
         </div>
@@ -75,3 +57,11 @@
         </article>
     </main>
 </div>
+
+@code {
+    private void Logout()
+    {
+        AuthState.Clear();
+        Nav.NavigateTo("/login", true);
+    }
+}
