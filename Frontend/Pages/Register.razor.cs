@@ -9,7 +9,7 @@ public partial class Register : ComponentBase
     [Inject] private HttpClient Http { get; set; } = default!;
     [Inject] private NavigationManager Navigation { get; set; } = default!;
 
-    private CreateteachersDto registerDto = new();
+    private RegisterExistingTeacherDto  registerDto = new();
     private string? ErrorMessage { get; set; }
     private bool IsLoading { get; set; }
     private bool IsSuccess { get; set; }
@@ -27,7 +27,7 @@ public partial class Register : ComponentBase
             if (response.IsSuccessStatusCode)
             {
                 IsSuccess = true;
-                registerDto = new CreateteachersDto();
+                registerDto = new RegisterExistingTeacherDto ();
                 StateHasChanged();
             }
             else

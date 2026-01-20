@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Shared.DTOs
 {
-    public class CreateteachersDto
+    public class RegisterExistingTeacherDto 
     {
         [Required]
         [MaxLength(100)]

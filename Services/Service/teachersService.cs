@@ -41,7 +41,7 @@ public class teachersService : IteachersService
         };
     }
 
-    private teachers ToModel(CreateteachersDto createDto)
+    private teachers ToModel(RegisterExistingTeacherDto  createDto)
     {
         var hashedPassword = PasswordHasher.HashPassword(createDto.password);
       _logger.LogInformation("Creating teacher with email: {Email}", createDto.email);
@@ -76,7 +76,7 @@ department_id_1 = createDto.department_id_1,
     }
 
     /// <inheritdoc />
- public int Addteachers(CreateteachersDto teachers)
+ public int Addteachers(RegisterExistingTeacherDto  teachers)
   {
         teachers createdteachers = ToModel(teachers);
         _logger.LogInformation("Adding teacher to database: {Email}, Password hash length: {Length}", 
