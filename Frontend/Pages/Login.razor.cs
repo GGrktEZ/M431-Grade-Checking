@@ -1,78 +1,90 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Shared.DTOs;
 using System.Net.Http.Json;
 
-namespace Frontend.Pages;
-
-public partial class Login : ComponentBase
+namespace Frontend.Pages
 {
-    [Inject] private HttpClient Http { get; set; } = default!;
-
-    // Model
-    protected LoginRequestDto loginDto = new();
-
-    // Form / Validation
-    protected EditContext _editContext = default!;
-
-    // UI state
-    protected string? ErrorMessage { get; set; }
-    protected string? InfoMessage { get; set; }
-    protected bool IsLoading { get; set; }
-
-    protected override void OnInitialized()
+    public partial class Login
     {
-        _editContext = new EditContext(loginDto);
-    }
+        private bool IsLoading;
+        private string? ErrorMessage;
+        private string? InfoMessage;
 
-    // 2FA: Beim Klick wird NUR eine Login-Mail gesendet (kein JWT sofort)
-    protected async Task HandleSubmit(EditContext _)
-    {
-        ErrorMessage = null;
-        InfoMessage = null;
+        private bool IsCodeStep;
 
-        if (!_editContext.Validate())
-            return;
+        private StartLoginRequestDto startReq = new();
+        private ConfirmLoginRequestDto confirmReq = new();
 
-        IsLoading = true;
-
-        try
+        private async Task SendCode()
         {
-            var response = await Http.PostAsJsonAsync("api/auth", loginDto);
+            ErrorMessage = null;
+            InfoMessage = null;
+            IsLoading = true;
 
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                ErrorMessage = "Login fehlgeschlagen (Daten falsch oder E-Mail nicht bestätigt).";
-                return;
+                var res = await Http.PostAsJsonAsync("api/auth", startReq);
+                if (!res.IsSuccessStatusCode)
+                {
+                    ErrorMessage = "Login fehlgeschlagen (Daten falsch oder E-Mail nicht bestätigt).";
+                    return;
+                }
+
+                var dto = await res.Content.ReadFromJsonAsync<StartLoginResponseDto>();
+                if (dto == null || !dto.success)
+                {
+                    ErrorMessage = dto?.message ?? "Login fehlgeschlagen.";
+                    return;
+                }
+
+                InfoMessage = dto.message;
+                IsCodeStep = true;
+
+                // Email in ConfirmRequest übernehmen
+                confirmReq.email = startReq.email;
             }
-
-            var res = await response.Content.ReadFromJsonAsync<StartLoginResponseDto>();
-
-            if (res == null)
+            finally
             {
-                ErrorMessage = "Login fehlgeschlagen (Server-Antwort ungültig).";
-                return;
+                IsLoading = false;
             }
-
-            if (!res.success)
-            {
-                ErrorMessage = string.IsNullOrWhiteSpace(res.message)
-                    ? "Login fehlgeschlagen."
-                    : res.message;
-                return;
-            }
-
-            InfoMessage = string.IsNullOrWhiteSpace(res.message)
-                ? "Bestätigungs-Mail wurde gesendet. Bitte Link klicken."
-                : res.message;
         }
-        catch (Exception ex)
+
+        private async Task ConfirmCode()
         {
-            ErrorMessage = $"Request fehlgeschlagen: {ex.Message}";
+            ErrorMessage = null;
+            InfoMessage = null;
+            IsLoading = true;
+
+            try
+            {
+                var res = await Http.PostAsJsonAsync("api/auth/confirm", confirmReq);
+                if (!res.IsSuccessStatusCode)
+                {
+                    ErrorMessage = "Code ungültig oder abgelaufen.";
+                    return;
+                }
+
+                var login = await res.Content.ReadFromJsonAsync<LoginResponseDto>();
+                if (login == null || string.IsNullOrWhiteSpace(login.Token) || login.teacher_id <= 0)
+                {
+                    ErrorMessage = "Login fehlgeschlagen.";
+                    return;
+                }
+
+                AuthState.Token = login.Token;
+                AuthState.TeacherId = login.teacher_id;
+
+                Nav.NavigateTo("/formular");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
-        finally
+
+        private void BackToPassword()
         {
-            IsLoading = false;
+            IsCodeStep = false;
+            confirmReq.code = "";
         }
     }
 }

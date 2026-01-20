@@ -18,20 +18,19 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
-    // Bestehender Login (direkt JWT) - kannst du fuer Debug/Alt-Flow behalten
+    // Optional: Direkt-Login (Debug)
     [HttpPost("direct")]
-    public ActionResult<LoginResponseDto?> Login(LoginRequestDto loginReq)
+    public ActionResult<LoginResponseDto?> Login([FromBody] LoginRequestDto loginReq)
     {
         LoginResponseDto? loginRes = _authService.VerifyEmail(loginReq);
         return loginRes == null ? Unauthorized() : Ok(loginRes);
     }
 
-    // 2FA Start: Passwort pruefen -> Login-Mail senden
-    // Frontend klickt "Login" und bekommt nur eine Message zurueck.
+    // 2FA Schritt 1: Email+Passwort -> Code senden
     [HttpPost]
-    public async Task<ActionResult<StartLoginResponseDto>> StartLogin(LoginRequestDto loginReq)
+    public async Task<ActionResult<StartLoginResponseDto>> StartLogin([FromBody] StartLoginRequestDto req)
     {
-        StartLoginResponseDto res = await _authService.StartEmail2FaLoginAsync(loginReq);
+        StartLoginResponseDto res = await _authService.StartEmailCodeLoginAsync(req);
 
         if (!res.success)
             return Unauthorized(res);
@@ -39,30 +38,19 @@ public class AuthController : ControllerBase
         return Ok(res);
     }
 
-    // 2FA Confirm: Link in Mail -> Token pruefen -> JWT erstellen
-    // Wenn FrontendBaseUrl gesetzt ist, redirectet er zur Frontend Callback-Route und uebergibt token/teacherId.
-    [HttpGet("confirm-login")]
-    public async Task<IActionResult> ConfirmLogin([FromQuery] string email, [FromQuery] string token)
+    // 2FA Schritt 2: Code bestaetigen -> JWT
+    [HttpPost("confirm")]
+    public async Task<ActionResult<LoginResponseDto>> ConfirmLogin([FromBody] ConfirmLoginRequestDto req)
     {
-        LoginResponseDto? loginRes = await _authService.ConfirmEmail2FaLoginAsync(email, token);
+        var loginRes = await _authService.ConfirmEmailCodeLoginAsync(req);
 
         if (loginRes == null)
-            return BadRequest("Login-Link ungueltig oder abgelaufen.");
+            return Unauthorized("Code ungueltig oder abgelaufen.");
 
-        string? frontendBase = _config["Auth:FrontendBaseUrl"]?.TrimEnd('/');
-
-        if (!string.IsNullOrWhiteSpace(frontendBase))
-        {
-            string redirectUrl =
-                $"{frontendBase}/auth-callback?token={Uri.EscapeDataString(loginRes.Token)}&teacherId={loginRes.teacher_id}";
-            return Redirect(redirectUrl);
-        }
-
-        // Fallback: JSON anzeigen (falls du noch keinen Callback im Frontend hast)
         return Ok(loginRes);
     }
 
-    // Bestehender Register-Endpoint (wie bei dir)
+    // Register bleibt wie bei dir
     [HttpPost("register")]
     public async Task<ActionResult<RegisterTeacherResponseDto>> Register(RegisterTeacherRequestDto req)
     {

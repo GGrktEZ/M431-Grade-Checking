@@ -262,4 +262,80 @@ public class AuthService : IAuthService
         SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
     }
+    public async Task<StartLoginResponseDto> StartEmailCodeLoginAsync(StartLoginRequestDto req)
+    {
+        try
+        {
+            string email = (req.email ?? "").Trim().ToLowerInvariant();
+
+            var teacher = _authRepository.GetTeacherByEmail(email);
+            if (teacher == null)
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+
+            if (!teacher.email_confirmed)
+                return new StartLoginResponseDto { success = false, message = "E-Mail ist nicht bestaetigt." };
+
+            if (string.IsNullOrWhiteSpace(teacher.password_hash))
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+
+            if (!PasswordHasher.VerifyPassword(req.password, teacher.password_hash))
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+
+            string code = LoginCode.Generate6DigitCode();
+            string codeHash = LoginCode.Hash(code);
+            DateTime expiresUtc = DateTime.UtcNow.AddMinutes(10);
+
+            bool ok = _authRepository.SetLoginToken(email, codeHash, expiresUtc);
+            if (!ok)
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+
+            await _emailService.SendAsync(
+                email,
+                "Login-Code",
+                $"Dein Login-Code lautet: {code}\n\nGueltig fuer 10 Minuten."
+            );
+
+            return new StartLoginResponseDto { success = true, message = "Code wurde gesendet. Bitte eingeben." };
+        }
+        catch
+        {
+            return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+        }
+    }
+
+    public async Task<LoginResponseDto?> ConfirmEmailCodeLoginAsync(ConfirmLoginRequestDto req)
+    {
+        try
+        {
+            string email = (req.email ?? "").Trim().ToLowerInvariant();
+            string code = (req.code ?? "").Trim();
+
+            if (code.Length != 6)
+                return null;
+
+            string codeHash = LoginCode.Hash(code);
+
+            var teacher = _authRepository.GetTeacherByEmailAndLoginTokenHash(email, codeHash);
+            if (teacher == null)
+                return null;
+
+            if (teacher.login_token_expires_at == null || teacher.login_token_expires_at < DateTime.UtcNow)
+                return null;
+
+            _authRepository.ClearLoginToken(email);
+
+            string jwt = GenerateJwtToken(teacher);
+
+            return new LoginResponseDto
+            {
+                Token = jwt,
+                teacher_id = teacher.teacher_id
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
 }

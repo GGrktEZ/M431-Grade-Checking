@@ -14,4 +14,7 @@ public interface IAuthService
     Task<StartLoginResponseDto> StartEmail2FaLoginAsync(LoginRequestDto loginReq);
 
     Task<LoginResponseDto?> ConfirmEmail2FaLoginAsync(string email, string token);
+    Task<StartLoginResponseDto> StartEmailCodeLoginAsync(StartLoginRequestDto req);
+    Task<LoginResponseDto?> ConfirmEmailCodeLoginAsync(ConfirmLoginRequestDto req);
+
 }

@@ -1,63 +1,78 @@
 @page "/"
 @page "/login"
+
 @using Shared.DTOs
+@inject HttpClient Http
+@inject Frontend.AuthState AuthState
+@inject NavigationManager Nav
 
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow-sm" style="max-width: 500px; width: 100%;">
+    <div class="card shadow-sm" style="width: 500px;">
         <div class="card-header text-center">
             <h4 class="mb-0">Login</h4>
         </div>
 
         <div class="card-body">
 
-            @* Info / Error Messages *@
             @if (!string.IsNullOrWhiteSpace(ErrorMessage))
             {
-                <div class="alert alert-danger" role="alert">
-                    @ErrorMessage
-                </div>
+                <div class="alert alert-danger">@ErrorMessage</div>
             }
-
             @if (!string.IsNullOrWhiteSpace(InfoMessage))
             {
-                <div class="alert alert-info" role="alert">
-                    @InfoMessage
-                </div>
+                <div class="alert alert-info">@InfoMessage</div>
             }
 
-            <EditForm EditContext="_editContext" OnSubmit="HandleSubmit">
-                <DataAnnotationsValidator />
-                <ValidationSummary class="text-danger" />
+            @if (!IsCodeStep)
+            {
+                <EditForm Model="startReq" OnValidSubmit="SendCode">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
 
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <InputText class="form-control" type="email" @bind-Value="loginDto.email" />
-                    <ValidationMessage For="@(() => loginDto.email)" />
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <InputText class="form-control" @bind-Value="startReq.email" />
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Passwort</label>
-                    <InputText class="form-control" type="password" @bind-Value="loginDto.password" />
-                    <ValidationMessage For="@(() => loginDto.password)" />
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">Passwort</label>
+                        <InputText class="form-control" type="password" @bind-Value="startReq.password" />
+                    </div>
 
-                <button type="submit" class="btn btn-primary w-100" disabled="@IsLoading">
-                    @if (IsLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span class="ms-2">Wird gesendet...</span>
-                    }
-                    else
-                    {
-                        <span>Login</span>
-                    }
-                </button>
-            </EditForm>
+                    <button class="btn btn-primary w-100" type="submit" disabled="@IsLoading">
+                        Code senden
+                    </button>
+                </EditForm>
+            }
+            else
+            {
+                <EditForm Model="confirmReq" OnValidSubmit="ConfirmCode">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        <InputText class="form-control" @bind-Value="confirmReq.code" />
+                        <div class="form-text">Bitte den 6-stelligen Code aus der E-Mail eingeben.</div>
+                    </div>
+
+                    <button class="btn btn-success w-100" type="submit" disabled="@IsLoading">
+                        Bestätigen
+                    </button>
+
+                    <button class="btn btn-link w-100 mt-2" type="button" @onclick="BackToPassword">
+                        Zurück
+                    </button>
+                </EditForm>
+            }
 
             <div class="text-center mt-3">
                 <span>Noch keinen Account?</span>
                 <a href="/register">Hier registrieren</a>
             </div>
+
         </div>
     </div>
 </div>
+
+
