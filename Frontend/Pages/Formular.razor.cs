@@ -7,6 +7,8 @@ namespace Frontend.Pages;
 public partial class Formular : ComponentBase
 {
     [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+    [Inject] private Frontend.AuthState AuthState { get; set; } = default!;
 
     private FormModel _model = new();
 
@@ -17,12 +19,27 @@ public partial class Formular : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        _model.teacher_id = 14; // TEST: Lindauer
+        // ----- Guard: nur per Login zugänglich -----
+        if (!AuthState.IsLoggedIn)
+        {
+            Navigation.NavigateTo("/login", true);
+            return;
+        }
+
+        // teacher_id aus Login-State
+        _model.teacher_id = AuthState.TeacherId!.Value;
 
         // KEIN CRASH MEHR – alle Calls abgesichert
+
+        // Option A (empfohlen, wenn du den Endpoint bereits hast):
+        // _classes = await TryGet<List<classesDto>>($"api/teachers/{_model.teacher_id}/classes") ?? new();
+
+        // Option B (falls du teacher-spezifisch noch nicht umgesetzt hast):
         _classes = await TryGet<List<classesDto>>("api/classes") ?? new();
+
         _modulesForTeacher = await TryGet<List<ModuleDto>>(
             $"api/teachers/{_model.teacher_id}/modules") ?? new();
+
         _prorectorsForTeacher = await TryGet<List<prorectorsDto>>(
             $"api/teachers/{_model.teacher_id}/prorectors") ?? new();
     }
@@ -80,7 +97,6 @@ public partial class Formular : ComponentBase
         public string? new_grade { get; set; }
         public string? comment { get; set; }
         public bool has_future_grade { get; set; }
-
     }
 
     private class EnrollmentAndLastGradeDto
@@ -113,5 +129,4 @@ public partial class Formular : ComponentBase
         _model.new_grade = null;
         _model.comment = null;
     }
-
 }

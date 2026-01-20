@@ -21,16 +21,16 @@ namespace WebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegisterTeacher([FromBody] CreateteachersDto dto)
+        public async Task<IActionResult> RegisterTeacher([FromBody] RegisterExistingTeacherDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest("Ungültige Eingaben.");
+                return BadRequest("Ungueltige Eingaben.");
 
             if (!string.Equals(dto.email?.Trim(), dto.email_confirm?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return BadRequest("Email-Adressen stimmen nicht überein.");
+                return BadRequest("Email-Adressen stimmen nicht ueberein.");
 
             if (!string.Equals(dto.password, dto.password_confirm, StringComparison.Ordinal))
-                return BadRequest("Passwörter stimmen nicht überein.");
+                return BadRequest("Passwoerter stimmen nicht ueberein.");
 
             string email = dto.email.Trim().ToLowerInvariant();
 
@@ -42,10 +42,12 @@ namespace WebAPI.Controllers
             DateTime nowUtc = DateTime.UtcNow;
             DateTime expiresUtc = nowUtc.AddYears(1);
 
+            // WICHTIG: password_hash darf bei email_confirmed = 0 ueberschrieben werden,
+            // sonst "haengt" eine kaputte Erstregistrierung fest.
             const string sql = @"
 UPDATE teachers
 SET
-    password_hash = IFNULL(password_hash, @password_hash),
+    password_hash = @password_hash,
     email_confirmed = 0,
     email_confirmation_token_hash = @token_hash,
     email_confirmation_expires_at = @expires_at,
@@ -61,11 +63,11 @@ WHERE
 
             int rows;
 
-            await using (var conn = new MySqlConnection(_connectionString))
+            await using (var conn = new MySqlConnector.MySqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
 
-                await using var cmd = new MySqlCommand(sql, conn);
+                await using var cmd = new MySqlConnector.MySqlCommand(sql, conn);
                 cmd.Parameters.AddWithValue("@password_hash", passwordHash);
                 cmd.Parameters.AddWithValue("@token_hash", tokenHash);
                 cmd.Parameters.AddWithValue("@expires_at", expiresUtc);
@@ -76,7 +78,7 @@ WHERE
             }
 
             if (rows == 0)
-                return BadRequest("Registrierung nicht möglich (Benutzer existiert nicht oder ist bereits bestätigt).");
+                return BadRequest("Registrierung nicht moeglich (Benutzer existiert nicht oder ist bereits bestaetigt).");
 
             string baseUrl = _config["Registration:ConfirmUrlBase"] ?? "";
             if (string.IsNullOrWhiteSpace(baseUrl))
@@ -88,8 +90,8 @@ WHERE
             {
                 await _emailService.SendAsync(
                     email,
-                    "E-Mail bestätigen",
-                    $"Bitte bestätige deine E-Mail-Adresse mit folgendem Link:\n\n{link}\n\nDer Link ist 1 Jahr gültig."
+                    "E-Mail bestaetigen",
+                    $"Bitte bestaetige deine E-Mail-Adresse mit folgendem Link:\n\n{link}\n\nDer Link ist 1 Jahr gueltig."
                 );
             }
             catch (Exception ex)
@@ -97,8 +99,9 @@ WHERE
                 return StatusCode(500, $"Registrierung gespeichert, aber E-Mail Versand fehlgeschlagen: {ex.Message}");
             }
 
-            return Ok("Registrierung erfolgreich. Bitte E-Mail bestätigen.");
+            return Ok("Registrierung erfolgreich. Bitte E-Mail bestaetigen.");
         }
+
 
         [HttpGet("confirm")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] string token)

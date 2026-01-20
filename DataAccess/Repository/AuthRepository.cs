@@ -13,7 +13,8 @@ public class AuthRepository : IAuthRepository
 
     public teachers? GetTeacherByEmail(string email)
     {
-        return _db.teachers.FirstOrDefault(t => t.email.ToLower() == email.ToLower());
+        string e = (email ?? "").Trim().ToLowerInvariant();
+        return _db.teachers.FirstOrDefault(t => t.email.ToLower() == e);
     }
 
     public bool TryRegisterExistingTeacher(
@@ -24,13 +25,13 @@ public class AuthRepository : IAuthRepository
         DateTime requestedAtUtc
     )
     {
-        teachers? teacher = _db.teachers.FirstOrDefault(t => t.email.ToLower() == email.ToLower());
+        string e = (email ?? "").Trim().ToLowerInvariant();
+        teachers? teacher = _db.teachers.FirstOrDefault(t => t.email.ToLower() == e);
 
         if (teacher == null)
             return false;
 
-        // Regel: keine neuen Lehrer; nur registrieren wenn noch nicht registriert
-        // (du kannst alternativ auch auf email_confirmed checken – hier ist es klar über password_hash)
+        // Bestehende Regel (dein aktueller Stand): nur wenn noch nicht registriert
         if (!string.IsNullOrEmpty(teacher.password_hash))
             return false;
 
@@ -40,6 +41,49 @@ public class AuthRepository : IAuthRepository
         teacher.email_confirmation_expires_at = expiresAtUtc;
         teacher.registration_requested_at = requestedAtUtc;
         teacher.email_confirmed_at = null;
+
+        _db.SaveChanges();
+        return true;
+    }
+
+    // =========================
+    // NEU: 2FA Login Token
+    // =========================
+
+    public bool SetLoginToken(string email, string tokenHash, DateTime expiresAtUtc)
+    {
+        string e = (email ?? "").Trim().ToLowerInvariant();
+        teachers? teacher = _db.teachers.FirstOrDefault(t => t.email.ToLower() == e);
+        if (teacher == null)
+            return false;
+
+        teacher.login_token_hash = tokenHash;
+        teacher.login_token_expires_at = expiresAtUtc;
+
+        _db.SaveChanges();
+        return true;
+    }
+
+    public teachers? GetTeacherByEmailAndLoginTokenHash(string email, string tokenHash)
+    {
+        string e = (email ?? "").Trim().ToLowerInvariant();
+        string h = tokenHash ?? "";
+
+        return _db.teachers.FirstOrDefault(t =>
+            t.email.ToLower() == e &&
+            t.login_token_hash == h
+        );
+    }
+
+    public bool ClearLoginToken(string email)
+    {
+        string e = (email ?? "").Trim().ToLowerInvariant();
+        teachers? teacher = _db.teachers.FirstOrDefault(t => t.email.ToLower() == e);
+        if (teacher == null)
+            return false;
+
+        teacher.login_token_hash = null;
+        teacher.login_token_expires_at = null;
 
         _db.SaveChanges();
         return true;

@@ -22,7 +22,7 @@ public class teachers
     [MaxLength(500)]
     public string? password_hash { get; set; }
 
-    // NEW: Registration / Email confirmation
+    // Registration / Email confirmation
     public bool email_confirmed { get; set; } = false;
 
     [MaxLength(500)]
@@ -31,4 +31,10 @@ public class teachers
     public DateTime? email_confirmation_expires_at { get; set; }
     public DateTime? registration_requested_at { get; set; }
     public DateTime? email_confirmed_at { get; set; }
+
+    // NEU: 2FA Login per Mail (one-time)
+    [MaxLength(500)]
+    public string? login_token_hash { get; set; }
+
+    public DateTime? login_token_expires_at { get; set; }
 }

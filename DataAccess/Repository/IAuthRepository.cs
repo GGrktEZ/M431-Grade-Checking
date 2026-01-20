@@ -6,7 +6,7 @@ public interface IAuthRepository
 {
     teachers? GetTeacherByEmail(string email);
 
-    // NEW: registration update on existing teacher
+    // Registration update on existing teacher
     bool TryRegisterExistingTeacher(
         string email,
         string passwordHash,
@@ -14,4 +14,11 @@ public interface IAuthRepository
         DateTime expiresAtUtc,
         DateTime requestedAtUtc
     );
+
+    // NEU: 2FA Login Token
+    bool SetLoginToken(string email, string tokenHash, DateTime expiresAtUtc);
+
+    teachers? GetTeacherByEmailAndLoginTokenHash(string email, string tokenHash);
+
+    bool ClearLoginToken(string email);
 }

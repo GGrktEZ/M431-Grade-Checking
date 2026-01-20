@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Shared.DTOs;
 using System.Net.Http.Json;
 
@@ -6,48 +7,72 @@ namespace Frontend.Pages;
 
 public partial class Login : ComponentBase
 {
- [Inject]
-    private HttpClient Http { get; set; } = default!;
+    [Inject] private HttpClient Http { get; set; } = default!;
 
-    [Inject]
-    private NavigationManager Navigation { get; set; } = default!;
+    // Model
+    protected LoginRequestDto loginDto = new();
 
-    private LoginRequestDto loginDto = new();
-    private string? ErrorMessage { get; set; }
-    private bool IsLoading { get; set; }
+    // Form / Validation
+    protected EditContext _editContext = default!;
 
-    private async Task HandleLogin()
+    // UI state
+    protected string? ErrorMessage { get; set; }
+    protected string? InfoMessage { get; set; }
+    protected bool IsLoading { get; set; }
+
+    protected override void OnInitialized()
     {
-        IsLoading = true;
+        _editContext = new EditContext(loginDto);
+    }
+
+    // 2FA: Beim Klick wird NUR eine Login-Mail gesendet (kein JWT sofort)
+    protected async Task HandleSubmit(EditContext _)
+    {
         ErrorMessage = null;
+        InfoMessage = null;
 
-  try
+        if (!_editContext.Validate())
+            return;
+
+        IsLoading = true;
+
+        try
         {
-            var response = await Http.PostAsJsonAsync("api/Auth", loginDto);
+            var response = await Http.PostAsJsonAsync("api/auth", loginDto);
 
-     if (response.IsSuccessStatusCode)
-     {
-     var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
- 
-    if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
-         {
-   // Store token (you may want to use local storage or session storage)
-  // For now, just navigate to a success page or dashboard
-         Navigation.NavigateTo("/");
-      }
+            if (!response.IsSuccessStatusCode)
+            {
+                ErrorMessage = "Login fehlgeschlagen (Daten falsch oder E-Mail nicht bestätigt).";
+                return;
             }
-       else
-   {
-       ErrorMessage = "Invalid email or password";
-   }
+
+            var res = await response.Content.ReadFromJsonAsync<StartLoginResponseDto>();
+
+            if (res == null)
+            {
+                ErrorMessage = "Login fehlgeschlagen (Server-Antwort ungültig).";
+                return;
+            }
+
+            if (!res.success)
+            {
+                ErrorMessage = string.IsNullOrWhiteSpace(res.message)
+                    ? "Login fehlgeschlagen."
+                    : res.message;
+                return;
+            }
+
+            InfoMessage = string.IsNullOrWhiteSpace(res.message)
+                ? "Bestätigungs-Mail wurde gesendet. Bitte Link klicken."
+                : res.message;
         }
-   catch (Exception ex)
+        catch (Exception ex)
         {
-   ErrorMessage = $"An error occurred: {ex.Message}";
-  }
-      finally
+            ErrorMessage = $"Request fehlgeschlagen: {ex.Message}";
+        }
+        finally
         {
             IsLoading = false;
-   }
+        }
     }
 }

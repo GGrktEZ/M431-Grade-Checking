@@ -29,10 +29,12 @@ public class AuthService : IAuthService
         _emailService = emailService;
     }
 
-    // ... dein bestehendes VerifyEmail + GenerateJwtToken bleibt unverändert ...
+    // Bestehend: Direkt-Login (JWT sofort)
     public LoginResponseDto? VerifyEmail(LoginRequestDto loginReq)
     {
-        var teacher = _authRepository.GetTeacherByEmail(loginReq.email);
+        string email = (loginReq.email ?? "").Trim().ToLowerInvariant();
+
+        var teacher = _authRepository.GetTeacherByEmail(email);
 
         if (teacher == null)
             return null;
@@ -45,9 +47,14 @@ public class AuthService : IAuthService
 
         string token = GenerateJwtToken(teacher);
 
-        return new LoginResponseDto { Token = token };
+        return new LoginResponseDto
+        {
+            Token = token,
+            teacher_id = teacher.teacher_id
+        };
     }
 
+    // Bestehend: Registration
     public async Task<RegisterTeacherResponseDto> RegisterTeacherAsync(RegisterTeacherRequestDto req)
     {
         // 1) Teacher muss existieren
@@ -93,8 +100,7 @@ public class AuthService : IAuthService
             };
         }
 
-        // 5) Bestätigungslink bauen (kommt aus appsettings)
-        // Beispiel: https://localhost:7051/confirm?email=...&token=...
+        // 5) Bestaetigungslink bauen (kommt aus appsettings)
         string baseUrl = _config["Registration:ConfirmUrlBase"] ?? "";
         string link = $"{baseUrl}?email={Uri.EscapeDataString(req.email)}&token={Uri.EscapeDataString(rawToken)}";
 
@@ -113,9 +119,123 @@ public class AuthService : IAuthService
         };
     }
 
+    // =========================
+    // NEU: 2FA Login per Mail
+    // =========================
+
+    // Schritt 1: Passwort pruefen, danach Mail mit Login-Link senden
+    public async Task<StartLoginResponseDto> StartEmail2FaLoginAsync(LoginRequestDto loginReq)
+    {
+        try
+        {
+            string email = (loginReq.email ?? "").Trim().ToLowerInvariant();
+
+            var teacher = _authRepository.GetTeacherByEmail(email);
+            if (teacher == null)
+            {
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+            }
+
+            // Nur aktivierte Accounts duerfen 2FA Login starten
+            if (!teacher.email_confirmed)
+            {
+                return new StartLoginResponseDto { success = false, message = "E-Mail ist nicht bestaetigt." };
+            }
+
+            if (string.IsNullOrWhiteSpace(teacher.password_hash))
+            {
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+            }
+
+            if (!PasswordHasher.VerifyPassword(loginReq.password, teacher.password_hash))
+            {
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+            }
+
+            // One-time Login Token erstellen
+            string rawToken = LoginToken.CreateRawToken();
+            string tokenHash = LoginToken.HashToken(rawToken);
+            DateTime expiresUtc = DateTime.UtcNow.AddMinutes(10);
+
+            // Token speichern
+            bool ok = _authRepository.SetLoginToken(email, tokenHash, expiresUtc);
+            if (!ok)
+            {
+                return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+            }
+
+            // Link bauen (aus appsettings)
+            // z.B. https://localhost:7297/api/auth/confirm-login
+            string baseUrl = _config["Auth:ConfirmLoginUrlBase"] ?? "";
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                return new StartLoginResponseDto
+                {
+                    success = false,
+                    message = "Server ist nicht korrekt konfiguriert (ConfirmLoginUrlBase fehlt)."
+                };
+            }
+
+            string link =
+                $"{baseUrl}?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(rawToken)}";
+
+            await _emailService.SendAsync(
+                email,
+                "Login bestaetigen",
+                "Bitte bestaetige deinen Login ueber folgenden Link (10 Minuten gueltig):\n\n" +
+                link + "\n\n" +
+                "Wenn du das nicht warst, ignoriere diese Mail."
+            );
+
+            return new StartLoginResponseDto
+            {
+                success = true,
+                message = "Bestaetigungs-Mail wurde gesendet. Bitte Link klicken."
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "StartEmail2FaLoginAsync failed");
+            return new StartLoginResponseDto { success = false, message = "Login fehlgeschlagen." };
+        }
+    }
+
+    // Schritt 2: Link klicken, Token pruefen, Token loeschen, JWT ausgeben
+    public Task<LoginResponseDto?> ConfirmEmail2FaLoginAsync(string emailRaw, string tokenRaw)
+    {
+        try
+        {
+            string email = (emailRaw ?? "").Trim().ToLowerInvariant();
+            string tokenHash = LoginToken.HashToken(tokenRaw ?? "");
+
+            var teacher = _authRepository.GetTeacherByEmailAndLoginTokenHash(email, tokenHash);
+            if (teacher == null)
+                return Task.FromResult<LoginResponseDto?>(null);
+
+            if (teacher.login_token_expires_at == null || teacher.login_token_expires_at < DateTime.UtcNow)
+                return Task.FromResult<LoginResponseDto?>(null);
+
+            // One-time: Token loeschen
+            _authRepository.ClearLoginToken(email);
+
+            // JWT erstellen
+            string jwt = GenerateJwtToken(teacher);
+
+            return Task.FromResult<LoginResponseDto?>(new LoginResponseDto
+            {
+                Token = jwt,
+                teacher_id = teacher.teacher_id
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConfirmEmail2FaLoginAsync failed");
+            return Task.FromResult<LoginResponseDto?>(null);
+        }
+    }
+
     private string GenerateJwtToken(teachers teacher)
     {
-        // unverändert
         JwtSecurityTokenHandler tokenHandler = new();
         byte[] key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
 

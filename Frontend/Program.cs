@@ -12,9 +12,13 @@ namespace Frontend
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
             // Configure HttpClient to point to the WebAPI server
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7297/") });
+            builder.Services.AddScoped(sp =>
+                new HttpClient { BaseAddress = new Uri("https://localhost:7297/") });
+
+            // >>> HIER EINFÜGEN <<<
+            builder.Services.AddScoped<AuthState>();
 
             await builder.Build().RunAsync();
         }
     }
-}                                              
+}

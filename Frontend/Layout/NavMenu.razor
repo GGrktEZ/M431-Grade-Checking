@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject Frontend.AuthState AuthState
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Nachtrag Semesternoten</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -9,16 +11,29 @@
 
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
+
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/login" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Login
             </NavLink>
         </div>
+
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/register" Match="NavLinkMatch.All">
                 <span aria-hidden="true"></span> Registration
             </NavLink>
         </div>
+
+        @* Formular NUR anzeigen, wenn eingeloggt *@
+        @if (AuthState.IsLoggedIn)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/formular" Match="NavLinkMatch.All">
+                    <span aria-hidden="true"></span> Formular
+                </NavLink>
+            </div>
+        }
+
     </nav>
 </div>
 
