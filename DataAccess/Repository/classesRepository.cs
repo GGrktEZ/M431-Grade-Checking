@@ -28,6 +28,12 @@ public class classesRepository : IclassesRepository
    }
 
    /// <inheritdoc />
+   public IEnumerable<classes> GetClassesByIds(IEnumerable<int> classIds)
+   {
+       return _db.classes.Where(c => classIds.Contains(c.class_id)).ToList();
+   }
+
+   /// <inheritdoc />
    public void Addclasses(classes newclasses)
    {
        _db.classes.Add(newclasses);

@@ -12,10 +12,4 @@ public class classesDto
     public string class_name { get; set; }
 
     public string description { get; set; }
-
-    [Required]
-    public int teacher_id { get; set; }
-
-    [Required]
-    public int module_id { get; set; }
 }

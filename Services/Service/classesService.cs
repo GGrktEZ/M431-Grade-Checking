@@ -19,8 +19,7 @@ public class classesService : IclassesService
         {
             class_id = classes.class_id,
             class_name = classes.class_name,
-            description = classes.description,
-            teacher_id = classes.teacher_id
+            description = classes.description
         };
     }
 
@@ -30,8 +29,7 @@ public class classesService : IclassesService
         {
             class_id = classesDto.class_id,
             class_name = classesDto.class_name,
-            description = classesDto.description,
-            teacher_id = classesDto.teacher_id
+            description = classesDto.description
         };
     }
 
@@ -40,8 +38,7 @@ public class classesService : IclassesService
         return new classes
         {
             class_name = createDto.class_name,
-            description = createDto.description,
-            teacher_id = createDto.teacher_id
+            description = createDto.description
         };
     }
 
@@ -78,7 +75,6 @@ public class classesService : IclassesService
        // Update properties from DTO
        classesToUpdate.class_name = classes.class_name;
        classesToUpdate.description = classes.description;
-       classesToUpdate.teacher_id = classes.teacher_id;
 
        _classesRepository.Updateclasses(classesToUpdate);
        return true;

@@ -9,7 +9,4 @@ public class UpdateclassesDto
     public string class_name { get; set; }
 
     public string description { get; set; }
-
-    [Required]
-    public int teacher_id { get; set; }
 }

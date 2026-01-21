@@ -12,12 +12,17 @@ namespace WebAPI.Controllers
         private readonly string _connectionString;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _config;
+        private readonly Iteacher_classesService _teacherClassesService;
 
-        public teachersController(IConfiguration config, IEmailService emailService)
+        public teachersController(
+         IConfiguration config, 
+      IEmailService emailService,
+    Iteacher_classesService teacherClassesService)
         {
-            _config = config;
+ _config = config;
             _connectionString = config.GetConnectionString("DefaultConnection")!;
-            _emailService = emailService;
+    _emailService = emailService;
+            _teacherClassesService = teacherClassesService;
         }
 
         [HttpPost]
@@ -145,39 +150,10 @@ WHERE
         }
 
         [HttpGet("{teacherId}/modules")]
-        public async Task<ActionResult<List<ModuleDto>>> GetModulesForTeacher(int teacherId)
+        public ActionResult<IEnumerable<ModuleDto>> GetModulesForTeacher(int teacherId)
         {
-            var result = new List<ModuleDto>();
-
-            const string sql = @"
-SELECT m.module_id, m.module_code, m.module_name, m.description
-FROM teacher_modules tm
-JOIN modules m ON m.module_id = tm.module_id
-WHERE tm.teacher_id = @teacherId
-ORDER BY m.module_code;
-";
-
-            await using var conn = new MySqlConnection(_connectionString);
-            await conn.OpenAsync();
-
-            await using var cmd = new MySqlCommand(sql, conn);
-            cmd.Parameters.AddWithValue("@teacherId", teacherId);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                result.Add(new ModuleDto
-                {
-                    module_id = reader.GetInt32("module_id"),
-                    module_code = reader.GetString("module_code"),
-                    module_name = reader.GetString("module_name"),
-                    description = reader.IsDBNull(reader.GetOrdinal("description"))
-                        ? null
-                        : reader.GetString("description")
-                });
-            }
-
-            return Ok(result);
+         var modules = _teacherClassesService.GetModulesByTeacherId(teacherId);
+  return Ok(modules);
         }
 
         [HttpGet("{teacherId}/prorectors")]
@@ -223,6 +199,13 @@ WHERE tp.teacher_id = @teacherId;
             }
 
             return Ok(result);
+        }
+
+        [HttpGet("{teacherId}/classes")]
+        public ActionResult<IEnumerable<classesDto>> GetClassesForTeacher(int teacherId)
+        {
+      var classes = _teacherClassesService.GetClassesByTeacherId(teacherId);
+            return Ok(classes);
         }
     }
 }

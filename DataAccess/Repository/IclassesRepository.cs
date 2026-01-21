@@ -16,6 +16,12 @@ public interface IclassesRepository
    /// <returns> A list of classes models. </returns>
    public IEnumerable<classes> GetAllclassess();
    /// <summary>
+   /// Gets classes by a list of class IDs.
+   /// </summary>
+   /// <param name="classIds">List of class IDs to retrieve.</param>
+   /// <returns>A list of classes models matching the IDs.</returns>
+   public IEnumerable<classes> GetClassesByIds(IEnumerable<int> classIds);
+   /// <summary>
    /// Adds the given model to the Database.
    /// </summary>
    /// <param name="newclasses"> The classes to get added. </param>

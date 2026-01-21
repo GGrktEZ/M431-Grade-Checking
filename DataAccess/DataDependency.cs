@@ -24,7 +24,7 @@ public static class DataDependency
         services.AddScoped<IclassesRepository, classesRepository>();
         services.AddScoped<Iclass_enrollmentsRepository, class_enrollmentsRepository>();
         services.AddScoped<IgradesRepository, gradesRepository>();
-    
+  
         // Authentication repository
         services.AddScoped<IAuthRepository, AuthRepository>();
         
@@ -33,5 +33,6 @@ public static class DataDependency
         services.AddScoped<IprorectorsRepository, prorectorsRepository>();
         services.AddScoped<Iteacher_prorectorsRepository, teacher_prorectorsRepository>();
         services.AddScoped<Igrade_changesRepository, grade_changesRepository>();
+        services.AddScoped<Iteacher_classesRepository, teacher_classesRepository>();
     }
 }

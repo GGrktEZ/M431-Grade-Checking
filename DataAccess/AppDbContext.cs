@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<prorectors> prorectors { get; set; }
     public DbSet<teacher_prorectors> teacher_prorectors { get; set; }
     public DbSet<grade_changes> grade_changes { get; set; }
+    public DbSet<teacher_classes> teacher_classes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +42,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<prorectors>().ToTable("prorectors");
         modelBuilder.Entity<teacher_prorectors>().ToTable("teacher_prorectors");
         modelBuilder.Entity<grade_changes>().ToTable("grade_changes");
+        modelBuilder.Entity<teacher_classes>().ToTable("teacher_classes");
 
         // Configure unique constraints
         modelBuilder.Entity<departments>()
@@ -66,5 +68,9 @@ public class AppDbContext : DbContext
             modelBuilder.Entity<class_enrollments>()
  .HasIndex(ce => new { ce.class_id, ce.student_id })
                 .IsUnique();
+
+        // Configure composite primary key for teacher_classes
+        modelBuilder.Entity<teacher_classes>()
+   .HasKey(tc => new { tc.teacher_id, tc.class_id, tc.module_id });
     }
 }

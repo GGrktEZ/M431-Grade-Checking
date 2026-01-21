@@ -26,6 +26,8 @@ public static class LogicDependency
         services.AddScoped<IprorectorsService, prorectorsService>();
         services.AddScoped<Iteacher_prorectorsService, teacher_prorectorsService>();
         services.AddScoped<Igrade_changesService, grade_changesService>();
+        services.AddScoped<Iteacher_classesService, teacher_classesService>();
+        services.AddScoped<IGradeChangeNotificationService, GradeChangeNotificationService>();
 
         // NEW
         services.AddScoped<IEmailService, EmailService>();
